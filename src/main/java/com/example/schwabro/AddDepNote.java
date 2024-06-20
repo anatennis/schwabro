@@ -8,14 +8,18 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.fileTypes.FileType;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.UIBundle;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.util.Collection;
 
 public class AddDepNote extends AnAction {
 
@@ -25,10 +29,11 @@ public class AddDepNote extends AnAction {
         VirtualFile[] contentRoots = ProjectRootManager.getInstance(editor.getProject()).getContentRoots();
         FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(true, true, true, true, true, true);
         FileSystemTreeImpl fileSystemTree = new FileSystemTreeImpl(editor.getProject(), fileChooserDescriptor);
-        createNewFile(contentRoots[0], fileSystemTree);
+
+        createNewFile(contentRoots[0], fileSystemTree, editor.getProject());
     }
 
-    static void createNewFile(final VirtualFile file, final FileSystemTreeImpl fileSystemTree) {
+    public static void createNewFile(final VirtualFile file, final FileSystemTreeImpl fileSystemTree, Project project) {
         String newFileName = generateDNName();
         String folder = Messages.showInputDialog("Please enter release branch name",
                 UIBundle.message("new.file.dialog.title"), Messages.getQuestionIcon());
@@ -40,11 +45,18 @@ public class AddDepNote extends AnAction {
             Messages.showMessageDialog(UIBundle.message("create.new.file.file.name.cannot.be.empty.error.message"),
                     UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
         }
-        //todo create file tree to folder
-        Exception failReason = fileSystemTree.createNewFile(file, newFileName, YAMLFileType.YML, createDNTemplate());
+        Exception failReason = fileSystemTree.createNewFolder(file, folder);
         if (failReason != null) {
-            Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
-                    UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+            if (!failReason.getMessage().contains("already exists"))
+                Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
+                        UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+        }
+        Collection<VirtualFile> virtualFilesByName = FilenameIndex.getVirtualFilesByName(folder, GlobalSearchScope.allScope(project));
+        failReason = fileSystemTree.createNewFile(virtualFilesByName.iterator().next(), newFileName, YAMLFileType.YML, createDNTemplate());
+        if (failReason != null) {
+            if (!failReason.getMessage().contains("already exists"))
+                Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
+                        UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
         }
     }
 

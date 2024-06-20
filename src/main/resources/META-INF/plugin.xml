@@ -24,7 +24,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-
+        <toolWindow factoryClass="com.example.schwabro.util.DNToolWindowFactory" id="DepNote" doNotActivateOnStart="true"/>
     </extensions>
     <applicationListeners>
         <listener class="com.example.schwabro.AddDNListener" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
