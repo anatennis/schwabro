@@ -18,25 +18,20 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBList;
-import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.content.ContentManager;
-import com.intellij.util.ui.JBUI;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class AddDNListener implements BulkFileListener, ApplicationComponent {
+public class AddDepNoteListener implements BulkFileListener, ApplicationComponent {
     private final AtomicBoolean wasTriggered = new AtomicBoolean(false);
     private final Set<String> changedFiles = new HashSet<>();
 

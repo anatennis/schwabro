@@ -17,6 +17,7 @@ intellij {
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
+    plugins.add("git4idea")
 }
 
 tasks {
