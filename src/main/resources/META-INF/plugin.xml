@@ -38,6 +38,26 @@
         <action id="com.example.schwabro.AddDepNote" class="com.example.schwabro.AddDepNote" text="Deployer Note">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
         </action>
+        <action id="com.example.schwabro.terminology.FindTermAction" class="com.example.schwabro.terminology.FindTermAction"
+                text="Find Terms in Current File" description="Finds terms in the current file">
+            <add-to-group group-id="HelpMenu" anchor="last"/>
+            <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl H"/>
+        </action>
+
+
+        <group id="TerminologyContextMenu" class="com.intellij.openapi.actionSystem.DefaultActionGroup" text="My Custom Context Menu" popup="true">
+            <action id="HideIconAction" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This"/>
+            <action id="HideAllIconsAction" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>
+            <action id="ShowAllTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction" text="Show All Terms"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+        </group>
+
+        <action id="ShowAllTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction" text="Show All Terms">
+            <add-to-group group-id="HelpMenu" anchor="last"/>
+        </action>
+
+        <action id="HideIconAction" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This Info"/>
+        <action id="HideAllIconsAction" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>-->
     </actions>
     <application-components>
         <component>

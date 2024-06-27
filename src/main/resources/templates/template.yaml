@@ -1,0 +1,9 @@
+Modules: [all]
+TOSX-:
+  info: |
+    INFO
+  required:
+    platforms: [TDA, SCHW]
+    destinations: [PROD, QA]
+    instructions: |
+      INSTRUCTIONS

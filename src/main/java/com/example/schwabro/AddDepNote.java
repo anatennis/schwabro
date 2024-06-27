@@ -15,6 +15,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.UIBundle;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +26,7 @@ import javax.swing.*;
 import java.util.Collection;
 
 public class AddDepNote extends AnAction {
+    static String FILE_TEMPLATE = "src/main/resources/templates/template.yaml";
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
@@ -61,13 +66,51 @@ public class AddDepNote extends AnAction {
     }
 
     private static String generateDNName() {
-        //todo
-        return "TOSX-0000";
+        String branchName = getCurrentGitBranch();
+        return branchName.substring(0, branchName.indexOf("-", 5)) + ".yml";
     }
 
     private static String createDNTemplate() {
-        //todo add DN template
-        return "content";
+        String branchName = getCurrentGitBranch();
+        String ticketName = branchName.substring(0, branchName.indexOf("-", 5));
+        String result = "";
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
+            String text;
+            while ((text = reader.readLine()) != null) {
+                if (text.contains("TOSX")) {
+                    text = ticketName + ":";
+                }
+
+                if (text.contains("INFO")) {
+                    text = "    " + branchName.substring(
+                            branchName.indexOf("-", 5)).replace("-", " ");
+                }
+
+                if (text.contains("INSTRUCTIONS")) {
+                    text = "      Add parameter";
+                }
+
+                result = result.concat(text + '\n');
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    private static String getCurrentGitBranch() {
+        try {
+            Process process = Runtime.getRuntime().exec("git rev-parse --abbrev-ref HEAD");
+            process.waitFor();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            return reader.readLine();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return "TOSX-0000";
+        }
     }
 
     public static final class YAMLFileType implements FileType {
