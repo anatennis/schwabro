@@ -27,6 +27,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.example.schwabro.util.DepNoteToolWindowFactory" id="DepNote" doNotActivateOnStart="true"/>
         <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory"/>
+        <postStartupActivity implementation="com.example.schwabro.ProjectListener"/>
     </extensions>
     <applicationListeners>
         <listener class="com.example.schwabro.AddDepNoteListener" topic="com.intellij.openapi.editor.event.DocumentListener"/>
@@ -58,6 +59,10 @@
 
         <action id="HideIconAction1" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This Info"/>
         <action id="HideAllIconsAction1" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>-->
+
+        <action id="ConfigHelperAction" class="com.example.schwabro.ConfigHelperAction" text="Open Config Helper">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
     </actions>
     <application-components>
         <component>
