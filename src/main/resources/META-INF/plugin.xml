@@ -25,43 +25,58 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.example.schwabro.util.DepNoteToolWindowFactory" id="DepNote" doNotActivateOnStart="true"/>
+        <toolWindow factoryClass="com.example.schwabro.util.DepNoteToolWindowFactory" id="DepNote"
+                    doNotActivateOnStart="true"/>
         <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory"/>
         <postStartupActivity implementation="com.example.schwabro.ProjectListener"/>
     </extensions>
     <applicationListeners>
-        <listener class="com.example.schwabro.AddDepNoteListener" topic="com.intellij.openapi.editor.event.DocumentListener"/>
+        <listener class="com.example.schwabro.AddDepNoteListener"
+                  topic="com.intellij.openapi.editor.event.DocumentListener"/>
     </applicationListeners>
     <actions>
-        <action id="com.example.schwabro.FindThisConfluenceAction" class="com.example.schwabro.FindThisConfluenceAction" text="Find This in Confluence!">
+        <group id="SchwaBro" text="SchwaBro" popup="true" icon="icons/icon_white.svg">
+            <group id="SchwaBro.DeployerNote" text="Deployer Note" popup="true"/>
+            <!--<group id="SchwaBro.Properties" text="Properties" popup="true"/>-->
+            <group id="SchwaBro.Terminology" text="Terminology" popup="true"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </group>
+        <action id="com.example.schwabro.FindThisConfluenceAction" class="com.example.schwabro.FindThisConfluenceAction"
+                text="Find This in Confluence!">
             <add-to-group group-id="EditorPopupMenu"/>
         </action>
-        <action id="com.example.schwabro.AddDepNoteAction" class="com.example.schwabro.AddDepNoteAction" text="Deployer Note">
+        <action id="com.example.schwabro.AddDepNoteAction" class="com.example.schwabro.AddDepNoteAction"
+                text="Add Deployer Note">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
+            <add-to-group group-id="GenerateGroup" anchor="last"/>
+            <add-to-group group-id="SchwaBro.DeployerNote" anchor="last"/>
         </action>
-        <action id="com.example.schwabro.terminology.FindTermAction" class="com.example.schwabro.terminology.FindTermAction"
+        <action id="com.example.schwabro.terminology.FindTermAction"
+                class="com.example.schwabro.terminology.FindTermAction"
                 text="Find Terms in Current File" description="Finds terms in the current file">
             <add-to-group group-id="HelpMenu" anchor="last"/>
+            <add-to-group group-id="SchwaBro.Terminology" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="shift ctrl H"/>
         </action>
-
-
-        <group id="TerminologyContextMenu" class="com.intellij.openapi.actionSystem.DefaultActionGroup" text="My Custom Context Menu" popup="true">
-            <action id="HideIconAction" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This"/>
-            <action id="HideAllIconsAction" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>
-            <action id="ShowAllTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction" text="Show All Terms"/>
+        <group id="TerminologyContextMenu" class="com.intellij.openapi.actionSystem.DefaultActionGroup" text="Terms Glo"
+               popup="true">
+            <action id="HideIconAction" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction"
+                    text="Hide This"/>
+            <action id="HideAllIconsAction"
+                    class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction"
+                    text="Hide All Terms"/>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
 
-        <action id="ShowAllTermsAction1" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction" text="Show All Terms">
+        <action id="ShowAllTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction"
+                text="Show All Terms">
             <add-to-group group-id="HelpMenu" anchor="last"/>
+            <add-to-group group-id="TerminologyContextMenu" anchor="last"/>
+            <add-to-group group-id="SchwaBro.Terminology" anchor="last"/>
         </action>
 
-        <action id="HideIconAction1" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This Info"/>
-        <action id="HideAllIconsAction1" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>-->
-
         <action id="ConfigHelperAction" class="com.example.schwabro.ConfigHelperAction" text="Open Config Helper">
-            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <add-to-group group-id="SchwaBro"/>
         </action>
     </actions>
     <application-components>
