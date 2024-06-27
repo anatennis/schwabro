@@ -25,17 +25,17 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.example.schwabro.util.DNToolWindowFactory" id="DepNote" doNotActivateOnStart="true"/>
+        <toolWindow factoryClass="com.example.schwabro.util.DepNoteToolWindowFactory" id="DepNote" doNotActivateOnStart="true"/>
         <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory"/>
     </extensions>
     <applicationListeners>
-        <listener class="com.example.schwabro.AddDepNoteListener" topic="com.intellij.openapi.vfs.newvfs.BulkFileListener"/>
+        <listener class="com.example.schwabro.AddDepNoteListener" topic="com.intellij.openapi.editor.event.DocumentListener"/>
     </applicationListeners>
     <actions>
-        <action id="com.example.schwabro.FindThisConfluence" class="com.example.schwabro.FindThisConfluence" text="Find This in Confluence!">
+        <action id="com.example.schwabro.FindThisConfluenceAction" class="com.example.schwabro.FindThisConfluenceAction" text="Find This in Confluence!">
             <add-to-group group-id="EditorPopupMenu"/>
         </action>
-        <action id="com.example.schwabro.AddDepNote" class="com.example.schwabro.AddDepNote" text="Deployer Note">
+        <action id="com.example.schwabro.AddDepNoteAction" class="com.example.schwabro.AddDepNoteAction" text="Deployer Note">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
         </action>
         <action id="com.example.schwabro.terminology.FindTermAction" class="com.example.schwabro.terminology.FindTermAction"
@@ -52,22 +52,22 @@
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
 
-        <action id="ShowAllTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction" text="Show All Terms">
+        <action id="ShowAllTermsAction1" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction" text="Show All Terms">
             <add-to-group group-id="HelpMenu" anchor="last"/>
         </action>
 
-        <action id="HideIconAction" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This Info"/>
-        <action id="HideAllIconsAction" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>-->
+        <action id="HideIconAction1" class="com.example.schwabro.terminology.actions.contextmenu.HideIconAction" text="Hide This Info"/>
+        <action id="HideAllIconsAction1" class="com.example.schwabro.terminology.actions.contextmenu.HideAllIconsAction" text="Hide All Terms"/>-->
     </actions>
     <application-components>
-        <component>
-            <implementation-class>com.example.schwabro.RelaxReminder</implementation-class>
-        </component>
         <component>
             <implementation-class>com.example.schwabro.AddDepNoteListener</implementation-class>
         </component>
         <component>
             <implementation-class>com.example.schwabro.GitCheckoutListener</implementation-class>
+        </component>
+        <component>
+            <implementation-class>com.example.schwabro.RelaxCoffeeReminder</implementation-class>
         </component>
     </application-components>
     <project-components>

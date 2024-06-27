@@ -1,23 +1,23 @@
-package com.example.schwabro.util;
+package com.example.schwabro;
 
-import com.example.schwabro.AddDepNote;
+import com.example.schwabro.util.ToolWindowContent;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.roots.ProjectRootManager;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class ButtonContent implements ToolWindowContent {
+public class DepNoteWindowContent implements ToolWindowContent {
     private final JPanel contentPanel = new JPanel();
-    private final JLabel noDNLabel = new JLabel();
+    private final JLabel noDNLabel = new JLabel("It seems no properties files were modified",
+            AllIcons.General.Information, SwingConstants.LEADING);
 
-    public ButtonContent(ToolWindow toolWindow) {
+    public DepNoteWindowContent(ToolWindow toolWindow) {
         contentPanel.setLayout(new BorderLayout(0, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         contentPanel.add(createInfoNoDNPanel(), BorderLayout.PAGE_START);
@@ -27,7 +27,6 @@ public class ButtonContent implements ToolWindowContent {
     @NotNull
     private JPanel createInfoNoDNPanel() {
         JPanel infoPanel = new JPanel();
-        noDNLabel.setText("It seems no properties files were modified");
         infoPanel.add(noDNLabel);
         return infoPanel;
     }
@@ -46,10 +45,9 @@ public class ButtonContent implements ToolWindowContent {
     }
 
     private static void addDN(Project project, ToolWindow toolWindow) {
-        VirtualFile[] contentRoots = ProjectRootManager.getInstance(project).getContentRoots();
         FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(true, true, true, true, true, true);
         FileSystemTreeImpl fileSystemTree = new FileSystemTreeImpl(project, fileChooserDescriptor);
-        AddDepNote.createNewFile(contentRoots[0], fileSystemTree, project);
+        AddDepNoteAction.createNewFile(fileSystemTree, project);
         toolWindow.hide();
     }
 

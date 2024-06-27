@@ -14,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -27,9 +29,9 @@ public class WorkTimerWidget extends JComponent implements CustomStatusBarWidget
         StatusBarWidget.TextPresentation, ActionListener {
 
     private final JLabel myLabel = new JLabel("00:00:00", AllIcons.General.Information, SwingConstants.LEADING);
+    private final ImageIcon icon = new ImageIcon("src/main/resources/META-INF/pluginIcon.svg");
     private final HashMap<String, Integer> workInBranches = new HashMap<>();
     private int secondsElapsed;
-
     private final Project project;
 
     public WorkTimerWidget(@NotNull Project project) {
@@ -56,7 +58,10 @@ public class WorkTimerWidget extends JComponent implements CustomStatusBarWidget
         new ClickListener() {
             @Override
             public boolean onClick(@NotNull MouseEvent e, int clickCount) {
-                JOptionPane.showMessageDialog(null, createWorkInfoPanel(statusBar.getProject()));
+                JFrame jFrame = new JFrame();
+                jFrame.setSize(400, 200);
+                JOptionPane.showMessageDialog(jFrame, createWorkInfoPanel(statusBar.getProject()),
+                        "Work Statistics", JOptionPane.INFORMATION_MESSAGE, icon);
                 return true;
             }
         }.installOn(getComponent());
@@ -104,19 +109,16 @@ public class WorkTimerWidget extends JComponent implements CustomStatusBarWidget
         myLabel.setText(getTime(secondsElapsed));
     }
 
-    private JPanel createWorkInfoPanel(@Nullable Project project) {
-        String currentGitBranch = GitUtils.getCurrentGitBranch(project);
+    private JPanel createWorkInfoPanel(Project project) {
+        String currentGitBranch = GitUtils.getTicketName(project);
         workInBranches.put(currentGitBranch, secondsElapsed);
 
         JPanel panel = new JPanel();
-        JLabel jLabel = new JLabel("Today you are working on:");
-        jLabel.setSize(250, 20);
+        JLabel jLabel = new JLabel("Today you are working on:", AllIcons.General.Mouse, SwingConstants.LEADING);
         panel.add(jLabel);
-        panel.add(Box.createHorizontalStrut(200));
-        panel.add(Box.createVerticalStrut(50));
+        panel.add(Box.createHorizontalStrut(50));
 
         JPanel jPanel = new JPanel();
-
         DefaultTableModel model = new DefaultTableModel();
         model.addColumn("Branch");
         model.addColumn("Time");
@@ -124,10 +126,13 @@ public class WorkTimerWidget extends JComponent implements CustomStatusBarWidget
             model.addRow(new Object[]{entry.getKey(), getTime(entry.getValue())});
         JTable table = new JTable(model);
         jPanel.add(table);
+        TableColumnModel columnModel = table.getColumnModel();
+        TableColumn branchColumn = columnModel.getColumn(0);
+        branchColumn.setPreferredWidth(150);
+        branchColumn.setCellRenderer((table1, value, isSelected, hasFocus, row, column)
+                -> new JLabel((String) value, AllIcons.Actions.Profile, SwingConstants.LEADING));
 
         panel.add(jPanel);
-        panel.add(Box.createHorizontalStrut(100));
-        panel.add(Box.createVerticalStrut(10));
         return panel;
     }
 

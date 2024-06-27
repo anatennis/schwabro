@@ -1,5 +1,6 @@
 package com.example.schwabro;
 
+import com.example.schwabro.util.GitUtils;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -9,7 +10,6 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
@@ -18,46 +18,57 @@ import com.intellij.ui.UIBundle;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.util.Collection;
 
-public class AddDepNote extends AnAction {
+public class AddDepNoteAction extends AnAction {
+    public static final String RELEASE = "release";
+    private FileSystemTreeImpl fileSystemTree;
+    private Project project;
     static String FILE_TEMPLATE = "src/main/resources/templates/template.yaml";
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
-        final Editor editor = e.getRequiredData(CommonDataKeys.EDITOR);
-        VirtualFile[] contentRoots = ProjectRootManager.getInstance(editor.getProject()).getContentRoots();
-        FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(true, true, true, true, true, true);
-        FileSystemTreeImpl fileSystemTree = new FileSystemTreeImpl(editor.getProject(), fileChooserDescriptor);
-
-        createNewFile(contentRoots[0], fileSystemTree, editor.getProject());
+        if (project == null) {
+            Editor editor = e.getRequiredData(CommonDataKeys.EDITOR);
+            project = editor.getProject();
+            FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(true, true, true, true, true, true);
+            fileSystemTree = new FileSystemTreeImpl(project, fileChooserDescriptor);
+        }
+        createNewFile(fileSystemTree, project);
     }
 
-    public static void createNewFile(final VirtualFile file, final FileSystemTreeImpl fileSystemTree, Project project) {
-        String newFileName = generateDNName();
-        String folder = Messages.showInputDialog("Please enter release branch name",
-                UIBundle.message("new.file.dialog.title"), Messages.getQuestionIcon());
-        if (folder == null) {
+    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project) {
+        String newFileName = GitUtils.getTicketName(project) + ".yml";
+        String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
+                UIBundle.message("new.file.dialog.title"), null);
+        if (releaseBranchFolder == null) {
             return;
         }
-        folder = folder.strip();
-        if (folder.isEmpty()) {
-            Messages.showMessageDialog(UIBundle.message("create.new.file.file.name.cannot.be.empty.error.message"),
-                    UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+        releaseBranchFolder = releaseBranchFolder.strip();
+        while (true) {
+            if (releaseBranchFolder.isEmpty()) {
+                Messages.showMessageDialog(UIBundle.message("create.new.file.file.name.cannot.be.empty.error.message"),
+                        UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+            } else {
+                break;
+            }
         }
-        Exception failReason = fileSystemTree.createNewFolder(file, folder);
+
+        Collection<VirtualFile> release = FilenameIndex.getVirtualFilesByName(RELEASE, GlobalSearchScope.allScope(project));
+        VirtualFile releaseFolder = release.iterator().next();
+        Exception failReason = fileSystemTree.createNewFolder(releaseFolder, releaseBranchFolder);
         if (failReason != null) {
             if (!failReason.getMessage().contains("already exists"))
                 Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
                         UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
         }
-        Collection<VirtualFile> virtualFilesByName = FilenameIndex.getVirtualFilesByName(folder, GlobalSearchScope.allScope(project));
-        failReason = fileSystemTree.createNewFile(virtualFilesByName.iterator().next(), newFileName, YAMLFileType.YML, createDNTemplate());
+        Collection<VirtualFile> branchFolder = FilenameIndex.getVirtualFilesByName(releaseBranchFolder, GlobalSearchScope.allScope(project));
+        failReason = fileSystemTree.createNewFile(branchFolder.iterator().next(), newFileName, YAMLFileType.YML, createDNTemplate(project));
         if (failReason != null) {
             if (!failReason.getMessage().contains("already exists"))
                 Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
@@ -65,14 +76,9 @@ public class AddDepNote extends AnAction {
         }
     }
 
-    private static String generateDNName() {
-        String branchName = getCurrentGitBranch();
-        return branchName.substring(0, branchName.indexOf("-", 5)) + ".yml";
-    }
-
-    private static String createDNTemplate() {
-        String branchName = getCurrentGitBranch();
-        String ticketName = branchName.substring(0, branchName.indexOf("-", 5));
+    private static String createDNTemplate(Project project) {
+        String branchName = GitUtils.getCurrentGitBranch(project);
+        String ticketName = GitUtils.getTicketName(project);
         String result = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
             String text;
@@ -97,20 +103,6 @@ public class AddDepNote extends AnAction {
         }
 
         return result;
-    }
-
-    private static String getCurrentGitBranch() {
-        try {
-            Process process = Runtime.getRuntime().exec("git rev-parse --abbrev-ref HEAD");
-            process.waitFor();
-
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
-            return reader.readLine();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            return "TOSX-0000";
-        }
     }
 
     public static final class YAMLFileType implements FileType {

@@ -1,5 +1,6 @@
 package com.example.schwabro.util;
 
+import com.example.schwabro.DepNoteWindowContent;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -10,11 +11,11 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import org.jetbrains.annotations.NotNull;
 
-final class DNToolWindowFactory implements ToolWindowFactory, DumbAware {
+final class DepNoteToolWindowFactory implements ToolWindowFactory, DumbAware {
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        ButtonContent toolWindowContent = new ButtonContent(toolWindow);
+        DepNoteWindowContent toolWindowContent = new DepNoteWindowContent(toolWindow);
         Content content = ContentFactory.SERVICE.getInstance().createContent(
                 toolWindowContent.getContentPanel(), "Modified .properties Files", false);
         toolWindow.getContentManager().addContent(content);

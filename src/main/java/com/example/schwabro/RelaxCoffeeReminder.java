@@ -15,9 +15,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class RelaxReminder implements ApplicationComponent {
+public class RelaxCoffeeReminder implements ApplicationComponent {
 
-    public RelaxReminder() {
+    public RelaxCoffeeReminder() {
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(1);
         executorService.schedule(() -> {
             @NotNull Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
@@ -28,9 +28,9 @@ public class RelaxReminder implements ApplicationComponent {
     private void addPopUp(Project project){
         JFrame frame = WindowManager.getInstance().getFrame(project);
         JBPopupFactory.getInstance()
-                .createHtmlTextBalloonBuilder("You have been working for two hours! Time to relax :)",
+                .createHtmlTextBalloonBuilder("You have been working for two hours! Time to relax and go for a cup of coffee :)",
                         MessageType.INFO, null)
-                .setFadeoutTime(7500)
+                .setFadeoutTime(10000)
                 .createBalloon()
                 .show(RelativePoint.getCenterOf(frame.getLayeredPane()), Balloon.Position.atRight);
     }

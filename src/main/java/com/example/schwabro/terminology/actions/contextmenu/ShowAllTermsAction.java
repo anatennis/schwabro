@@ -6,7 +6,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.ui.components.JBScrollPane;
 import java.awt.*;
-import javax.annotation.Nullable;
 import javax.swing.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -25,7 +24,6 @@ public class ShowAllTermsAction extends AnAction {
             setTitle("All Terms");
         }
 
-        @Nullable
         @Override
         protected JComponent createCenterPanel() {
             JPanel panel = new JPanel(new BorderLayout());

@@ -23,4 +23,13 @@ public class GitUtils {
         }
         return NO_GIT_INFO;
     }
+
+    public static String getTicketName(Project project) {
+        String branchName = getCurrentGitBranch(project);
+        int start = branchName.indexOf("TOSX-");
+        if (start < 0)
+            return branchName;
+        branchName = branchName.substring(start);
+        return branchName.substring(0, branchName.indexOf("-", 5));
+    }
 }
