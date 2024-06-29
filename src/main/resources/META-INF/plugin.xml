@@ -35,7 +35,7 @@
                   topic="com.intellij.openapi.editor.event.DocumentListener"/>
     </applicationListeners>
     <actions>
-        <group id="SchwaBro" text="SchwaBro" popup="true" icon="icons/icon_white.svg">
+        <group id="SchwaBro" text="SchwaBro" popup="true" icon="/icons/icon_white.svg">
             <group id="SchwaBro.DeployerNote" text="Deployer Note" popup="true"/>
             <!--<group id="SchwaBro.Properties" text="Properties" popup="true"/>-->
             <group id="SchwaBro.Terminology" text="Terminology" popup="true"/>
@@ -47,7 +47,6 @@
         </action>
         <action id="com.example.schwabro.AddDepNoteAction" class="com.example.schwabro.AddDepNoteAction"
                 text="Add Deployer Note">
-            <add-to-group group-id="GenerateGroup" anchor="last"/>
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <add-to-group group-id="SchwaBro.DeployerNote" anchor="last"/>
         </action>
