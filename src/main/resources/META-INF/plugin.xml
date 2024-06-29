@@ -27,7 +27,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.example.schwabro.util.DepNoteToolWindowFactory" id="DepNote"
                     doNotActivateOnStart="true"/>
-        <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory"/>
+        <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory" id="timer_widget"/>
         <postStartupActivity implementation="com.example.schwabro.ProjectListener"/>
     </extensions>
     <applicationListeners>
