@@ -25,7 +25,7 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.example.schwabro.util.DepNoteToolWindowFactory" id="DepNote"
+        <toolWindow factoryClass="com.example.schwabro.depnotes.DepNoteToolWindowFactory" id="DepNote"
                     doNotActivateOnStart="true"/>
         <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory" id="timer_widget"/>
         <postStartupActivity implementation="com.example.schwabro.ProjectListener"/>
@@ -34,7 +34,7 @@
                              displayName="SchwaBro Settings"/>
     </extensions>
     <applicationListeners>
-        <listener class="com.example.schwabro.AddDepNoteListener"
+        <listener class="com.example.schwabro.depnotes.AddDepNoteListener"
                   topic="com.intellij.openapi.editor.event.DocumentListener"/>
     </applicationListeners>
     <actions>
@@ -48,7 +48,7 @@
                 text="Find This in Confluence!">
             <add-to-group group-id="EditorPopupMenu"/>
         </action>
-        <action id="com.example.schwabro.AddDepNoteAction" class="com.example.schwabro.AddDepNoteAction"
+        <action id="com.example.schwabro.depnotes.AddDepNoteAction" class="com.example.schwabro.depnotes.AddDepNoteAction"
                 text="Add Deployer Note">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <add-to-group group-id="SchwaBro.DeployerNote" anchor="last"/>
@@ -83,10 +83,10 @@
     </actions>
     <application-components>
         <component>
-            <implementation-class>com.example.schwabro.AddDepNoteListener</implementation-class>
+            <implementation-class>com.example.schwabro.depnotes.AddDepNoteListener</implementation-class>
         </component>
         <component>
-            <implementation-class>com.example.schwabro.GitCheckoutListener</implementation-class>
+            <implementation-class>com.example.schwabro.util.GitUtils$GitCheckoutListener</implementation-class>
         </component>
         <component>
             <implementation-class>com.example.schwabro.RelaxCoffeeReminder</implementation-class>
@@ -94,7 +94,7 @@
     </application-components>
     <project-components>
         <component>
-            <implementation-class>com.example.schwabro.GitCheckoutListener</implementation-class>
+            <implementation-class>com.example.schwabro.util.GitUtils$GitCheckoutListener</implementation-class>
         </component>
     </project-components>
 </idea-plugin>

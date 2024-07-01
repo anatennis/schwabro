@@ -1,3 +1,3 @@
-package com.example.schwabro.util;
+package com.example.schwabro.depnotes;
 
 public interface ToolWindowContent { }

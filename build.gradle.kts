@@ -21,6 +21,10 @@ intellij {
     plugins.add("Git4Idea")
 }
 
+dependencies {
+    implementation("io.github.java-diff-utils:java-diff-utils:4.0")
+}
+
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {

@@ -1,4 +1,4 @@
-package com.example.schwabro;
+package com.example.schwabro.depnotes;
 
 import com.example.schwabro.util.GitUtils;
 import com.intellij.icons.AllIcons;
@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.fileTypes.FileType;
@@ -15,21 +16,23 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.search.FilenameIndex;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.ui.UIBundle;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
+
+import static com.example.schwabro.util.DepNoteUtils.addInfo;
 
 public class AddDepNoteAction extends AnAction {
     public static final String RELEASE = "release";
     private FileSystemTreeImpl fileSystemTree;
     private Project project;
-    static String FILE_TEMPLATE = "src/main/resources/templates/template.yaml";
+    static String FILE_TEMPLATE = "/Users/aromanova/Work/Java/schwabro/src/main/resources/templates/template.yaml";
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
@@ -43,6 +46,10 @@ public class AddDepNoteAction extends AnAction {
     }
 
     public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project) {
+        createNewFile(fileSystemTree, project, null);
+    }
+
+    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project, Set<DocumentImpl> changedFiles) {
         String newFileName = GitUtils.getTicketName(project) + ".yml";
         String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
                 UIBundle.message("new.file.dialog.title"), null);
@@ -68,7 +75,8 @@ public class AddDepNoteAction extends AnAction {
                         UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
         }
         Collection<VirtualFile> branchFolder = FilenameIndex.getVirtualFilesByName(releaseBranchFolder, GlobalSearchScope.allScope(project));
-        failReason = fileSystemTree.createNewFile(branchFolder.iterator().next(), newFileName, YAMLFileType.YML, createDNTemplate(project));
+        failReason = fileSystemTree.createNewFile(branchFolder.iterator().next(), newFileName, YAMLFileType.YML,
+                createDNTemplate(project, changedFiles));
         if (failReason != null) {
             if (!failReason.getMessage().contains("already exists"))
                 Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
@@ -76,8 +84,7 @@ public class AddDepNoteAction extends AnAction {
         }
     }
 
-    private static String createDNTemplate(Project project) {
-        String branchName = GitUtils.getCurrentGitBranch(project);
+    private static String createDNTemplate(Project project, Set<DocumentImpl> files) {
         String ticketName = GitUtils.getTicketName(project);
         String result = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
@@ -86,12 +93,9 @@ public class AddDepNoteAction extends AnAction {
                 if (text.contains("TOSX")) {
                     text = ticketName + ":";
                 }
-
-                if (text.contains("INFO")) {
-                    text = "    " + branchName.substring(
-                            branchName.indexOf("-", 5)).replace("-", " ");
+                if (text.contains("INFO") && files != null && !files.isEmpty()) {
+                    text = text.replace("    INFO", addInfo(files, project));
                 }
-
                 if (text.contains("INSTRUCTIONS")) {
                     text = "      Add parameter";
                 }

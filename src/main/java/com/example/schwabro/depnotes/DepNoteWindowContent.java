@@ -1,6 +1,5 @@
-package com.example.schwabro;
+package com.example.schwabro.depnotes;
 
-import com.example.schwabro.util.ToolWindowContent;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
@@ -11,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionListener;
 
 public class DepNoteWindowContent implements ToolWindowContent {
     private final JPanel contentPanel = new JPanel();
@@ -21,7 +21,7 @@ public class DepNoteWindowContent implements ToolWindowContent {
         contentPanel.setLayout(new BorderLayout(0, 10));
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
         contentPanel.add(createInfoNoDNPanel(), BorderLayout.PAGE_START);
-        contentPanel.add(createControlsPanel(toolWindow), BorderLayout.CENTER);
+        contentPanel.add(createControlsPanel(toolWindow, null), BorderLayout.CENTER);
     }
 
     @NotNull
@@ -32,11 +32,11 @@ public class DepNoteWindowContent implements ToolWindowContent {
     }
 
     @NotNull
-    public static JPanel createControlsPanel(ToolWindow toolWindow) {
+    public static JPanel createControlsPanel(ToolWindow toolWindow, ActionListener actionListener) {
         JPanel controlsPanel = new JPanel();
         JButton addDeployerNote = new JButton("Add Deployer Note");
         Project openProject = ProjectManager.getInstance().getOpenProjects()[0];
-        addDeployerNote.addActionListener(e -> addDN(openProject, toolWindow));
+        addDeployerNote.addActionListener(actionListener == null ? e -> addDN(openProject, toolWindow) : actionListener);
         controlsPanel.add(addDeployerNote);
         JButton hideToolWindowButton = new JButton("Hide");
         hideToolWindowButton.addActionListener(e -> toolWindow.hide(null));

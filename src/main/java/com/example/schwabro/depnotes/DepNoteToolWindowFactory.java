@@ -1,6 +1,6 @@
-package com.example.schwabro.util;
+package com.example.schwabro.depnotes;
 
-import com.example.schwabro.DepNoteWindowContent;
+import com.intellij.icons.AllIcons;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
@@ -15,8 +15,13 @@ final class DepNoteToolWindowFactory implements ToolWindowFactory, DumbAware {
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
+        createNotModifiedWindow(project, toolWindow);
+    }
+
+    public static void createNotModifiedWindow(Project project, ToolWindow toolWindow) {
         DepNoteWindowContent toolWindowContent = new DepNoteWindowContent(toolWindow);
-        Content content = ContentFactory.SERVICE.getInstance().createContent(
+        toolWindow.setIcon(AllIcons.General.Note);
+        Content content = ContentFactory.getInstance().createContent(
                 toolWindowContent.getContentPanel(), "Modified .properties Files", false);
         toolWindow.getContentManager().addContent(content);
         setToolWindowWidth(project, toolWindow.getId());
