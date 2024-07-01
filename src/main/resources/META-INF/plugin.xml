@@ -29,6 +29,9 @@
                     doNotActivateOnStart="true"/>
         <statusBarWidgetFactory implementation="com.example.schwabro.util.StatusBarFactory" id="timer_widget"/>
         <postStartupActivity implementation="com.example.schwabro.ProjectListener"/>
+        <projectConfigurable instance="com.example.schwabro.settings.SchwaBroSettingsConfigurable"
+                             id="com.example.plugin.settings.MyPluginSettingsConfigurable"
+                             displayName="SchwaBro Settings"/>
     </extensions>
     <applicationListeners>
         <listener class="com.example.schwabro.AddDepNoteListener"

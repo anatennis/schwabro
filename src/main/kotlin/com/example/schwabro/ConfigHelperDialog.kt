@@ -1,7 +1,6 @@
 package com.example.schwabro
 
-import com.intellij.find.FindManager
-import com.intellij.find.FindModel
+import com.example.schwabro.Constants.DEFAULT_CONFIG_SCOPE
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
@@ -18,7 +17,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.search.*
 import com.intellij.psi.search.scope.packageSet.NamedScopeManager
 import com.intellij.ui.components.JBTabbedPane
-import com.intellij.ui.components.JBTextField
 import com.intellij.ui.util.maximumHeight
 import com.jetbrains.rd.util.ConcurrentHashMap
 import io.ktor.util.*
@@ -28,12 +26,14 @@ import java.nio.file.Paths
 import javax.swing.*
 
 
-private const val DEFAULT_CONFIG_SCOPE = "Default configs"
-
 class ConfigHelperDialog(
     private val project: Project,
     private val dialogModel: DialogModel
 ) : DialogWrapper(project) {
+
+    companion object {
+        private val PROPERTY_FILE_NAME_PATTERN = Regex("[a-zA-Z0-9]*-(.*?)\\.properties")
+    }
 
     private lateinit var modulesComboBox: JComboBox<String>
     private lateinit var propertyNameTextField: JTextField
@@ -42,10 +42,21 @@ class ConfigHelperDialog(
     private lateinit var profilesAncestorPanel: JPanel
     private lateinit var fileListRenderer: FileListCellRenderer
 
-
     init {
-        title = "Default Configs Helper"
+        title = Constants.HELPER_DIALOG_TITLE
         init()
+    }
+
+    override fun createCenterPanel(): JComponent {
+        dialogModel.profiles.clear()
+        dialogModel.profiles.addAll(readProfilesFromModule(dialogModel.modules[0]))
+        return JPanel(BorderLayout()).apply {
+            preferredSize = Dimension(900, 600)
+            add(JBTabbedPane().apply {
+                addTab("Modify", createModifyTab())
+                addTab("Search", SearchPanel(project) { this@ConfigHelperDialog.close(0, false) })
+            }, BorderLayout.CENTER)
+        }
     }
 
     override fun doOKAction() {
@@ -53,9 +64,59 @@ class ConfigHelperDialog(
         super.doOKAction()
     }
 
+    private fun readProfilesFromModule(moduleName: String): Set<String> {
+        val moduleManager = ModuleManager.getInstance(project)
+        val uniqueProfiles = mutableSetOf<String>()
+
+        when (moduleName) {
+            Constants.MODULES_ALL -> {
+                for (module in moduleManager.modules) {
+                    val moduleRootManager = ModuleRootManager.getInstance(module)
+                    for (root in moduleRootManager.contentRoots) {
+                        val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
+                        if (defaultConfigsDir != null) {
+                            uniqueProfiles.addAll(retrieveConfigProfilesFromDir(defaultConfigsDir))
+                        }
+                    }
+                }
+            }
+            //todo dopilit'
+            Constants.TOP_LEVEL_MODULE -> {
+                val topProfiles =
+                    retrieveConfigProfilesFromDir(Utils.getDirectoryByName(Paths.get(project.basePath!!))!!)
+                uniqueProfiles.addAll(topProfiles)
+            }
+
+            else -> {
+                val module = moduleManager.findModuleByName(moduleName) ?: return emptySet()
+                val moduleRootManager = ModuleRootManager.getInstance(module)
+                for (root in moduleRootManager.contentRoots) {
+                    val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
+                    if (defaultConfigsDir != null) {
+                        uniqueProfiles.addAll(retrieveConfigProfilesFromDir(defaultConfigsDir))
+                    }
+                }
+            }
+        }
+        return uniqueProfiles
+    }
+
+    private fun retrieveConfigProfilesFromDir(directory: VirtualFile): Set<String> {
+        val profiles = mutableSetOf<String>()
+        for (file in directory.children) {
+            if (file.isDirectory) continue
+            val matchResult = PROPERTY_FILE_NAME_PATTERN.find(file.name)
+            if (matchResult != null) {
+                val profilesString = matchResult.groupValues[1]
+                profiles.addAll(profilesString.split("."))
+            }
+        }
+        return profiles
+    }
+
     private fun replace(newValue: String) {
         fileListRenderer.items.forEach { item ->
-            val tfn = Paths.get(project.basePath).resolve(item.fileName).toString()
+            val tfn = Paths.get(project.basePath ?: "").resolve(item.fileName).toString()
             val virtualFile = LocalFileSystem.getInstance().findFileByPath(tfn)
             if (virtualFile != null) {
                 val document = FileDocumentManager.getInstance().getDocument(virtualFile)
@@ -97,7 +158,7 @@ class ConfigHelperDialog(
 
 
                 val module = ModuleUtilCore.findModuleForPsiElement(element) ?: return@TextOccurenceProcessor true
-                if (module.name != selectedItem && selectedItem != "All") return@TextOccurenceProcessor true
+                if (module.name != selectedItem && selectedItem != Constants.MODULES_ALL) return@TextOccurenceProcessor true
                 val containingFile = element.containingFile
 
                 var hasProfiles = false
@@ -144,63 +205,9 @@ class ConfigHelperDialog(
 
     private fun getLineNumber(psiFile: PsiFile, offset: Int) = psiFile.viewProvider.document.getLineNumber(offset)
 
-    fun getRelativePath(file: VirtualFile): String {
+    private fun getRelativePath(file: VirtualFile): String {
         val projectPath = project.basePath ?: return file.path
         return file.path.removePrefix("$projectPath/")
-    }
-
-    private fun readProfilesFromModule(moduleName: String): Set<String> {
-        val moduleManager = ModuleManager.getInstance(project)
-        val uniqueProfiles = mutableSetOf<String>()
-        val pattern = Regex("[a-zA-Z0-9]*-(.*?)\\.properties")
-
-        fun processDirectory(directory: VirtualFile) {
-            for (file in directory.children) {
-                if (file.isDirectory) continue
-                val matchResult = pattern.find(file.name)
-                if (matchResult != null) {
-                    val profilesString = matchResult.groupValues[1]
-                    val profiles = profilesString.split(".")
-                    uniqueProfiles.addAll(profiles)
-                }
-            }
-        }
-
-        if (moduleName == "All") {
-            for (module in moduleManager.modules) {
-                val moduleRootManager = ModuleRootManager.getInstance(module)
-                for (root in moduleRootManager.contentRoots) {
-                    val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
-                    if (defaultConfigsDir != null) {
-                        processDirectory(defaultConfigsDir)
-                    }
-                }
-            }
-        } else {
-            val module = moduleManager.findModuleByName(moduleName) ?: return emptySet()
-            val moduleRootManager = ModuleRootManager.getInstance(module)
-            for (root in moduleRootManager.contentRoots) {
-                val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
-                if (defaultConfigsDir != null) {
-                    processDirectory(defaultConfigsDir)
-                }
-            }
-        }
-
-        return uniqueProfiles
-    }
-
-    override fun createCenterPanel(): JComponent {
-        val panel = JPanel(BorderLayout())
-        panel.preferredSize = Dimension(900, 600)
-        dialogModel.profiles.clear()
-        dialogModel.profiles.addAll(readProfilesFromModule(dialogModel.modules[0]))
-        val tabbedPane = JBTabbedPane()
-        tabbedPane.addTab("Modify", createModifyTab())
-        tabbedPane.addTab("Search", createSearchPanel())
-
-        panel.add(tabbedPane, BorderLayout.CENTER)
-        return panel
     }
 
     private fun createModifyTab(): JComponent {
@@ -224,19 +231,19 @@ class ConfigHelperDialog(
         leftPanel.add(Box.createVerticalStrut(10))
         val btnsPanel = JPanel(BorderLayout())
 
-        val btn = JButton("Search").apply {
+        val searchBtn = JButton(Constants.SEARCH).apply {
             addActionListener {
                 fileListRenderer.setItemsInList(search(modulesComboBox.selectedItem?.toString() ?: "All"))
             }
             maximumHeight = 10
         }
-        val apply = JButton("Apply").apply {
+        val apply = JButton(Constants.APPLY).apply {
             addActionListener {
                 replace(propertyValueTextField.text)
             }
             maximumHeight = 10
         }
-        btnsPanel.add(btn, BorderLayout.LINE_START)
+        btnsPanel.add(searchBtn, BorderLayout.LINE_START)
         btnsPanel.add(apply, BorderLayout.LINE_END)
         btnsPanel.maximumHeight = 20
         leftPanel.add(btnsPanel)
@@ -263,7 +270,7 @@ class ConfigHelperDialog(
     private fun createProfilesPanel(strings: Set<String>): JPanel {
         val panel = JPanel(BorderLayout())
         panel.border = BorderFactory.createCompoundBorder(
-            BorderFactory.createTitledBorder("Profiles"),
+            BorderFactory.createTitledBorder(Constants.PROFILES),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
         )
 
@@ -271,7 +278,7 @@ class ConfigHelperDialog(
         checkBoxPanel.layout = BoxLayout(checkBoxPanel, BoxLayout.Y_AXIS)
         panel.add(checkBoxPanel, BorderLayout.CENTER)
 
-        val addButton = JButton("Add")
+        val addButton = JButton(Constants.ADD)
         val textField = JTextField(20)
         strings.forEach {
             checkBoxPanel.add(JCheckBox(it))
@@ -293,7 +300,7 @@ class ConfigHelperDialog(
 
     private fun createModulesPanel(): JPanel {
         val panel = JPanel(BorderLayout())
-        panel.border = BorderFactory.createTitledBorder("Modules")
+        panel.border = BorderFactory.createTitledBorder(Constants.MODULES)
 
         modulesComboBox = ComboBox(dialogModel.modules.toTypedArray())
         modulesComboBox.addActionListener {
@@ -311,7 +318,7 @@ class ConfigHelperDialog(
 
     private fun createPropertyNamePanel(): JPanel {
         val panel = JPanel(BorderLayout())
-        panel.border = BorderFactory.createTitledBorder("Property Name")
+        panel.border = BorderFactory.createTitledBorder(Constants.PROPERTY_NAME)
 
         propertyNameTextField = JTextField(20)
         panel.add(propertyNameTextField, BorderLayout.CENTER)
@@ -321,42 +328,12 @@ class ConfigHelperDialog(
 
     private fun createPropertyValuePanel(): JPanel {
         val panel = JPanel(BorderLayout())
-        panel.border = BorderFactory.createTitledBorder("Property Value")
+        panel.border = BorderFactory.createTitledBorder(Constants.PROPERTY_VALUE)
 
         propertyValueTextField = JTextField(20)
         panel.add(propertyValueTextField, BorderLayout.CENTER)
 
         return panel
-    }
-
-    private fun createSearchPanel(): JComponent {
-        val panel = JPanel(BorderLayout())
-        val searchField = JBTextField()
-        panel.add(searchField, BorderLayout.NORTH)
-        val searchButton = JButton("Search")
-        searchButton.apply {
-            maximumHeight = 20
-            addActionListener {
-                val searchText = searchField.text
-                if (searchText.isNotEmpty()) {
-                    openFindWindowAndSearch(searchText)
-                }
-            }
-        }
-        panel.add(searchButton, BorderLayout.PAGE_END)
-        return panel
-    }
-
-    private fun openFindWindowAndSearch(toFind: String) {
-        this.close(0, false)
-        val findModel = FindModel().apply {
-            isCustomScope = true
-            customScopeName = DEFAULT_CONFIG_SCOPE
-            stringToFind = toFind
-            isCaseSensitive = false
-            isRegularExpressions = false
-        }
-        FindManager.getInstance(project).showFindDialog(findModel) {}
     }
 
     private fun getSelectedProfiles(): List<String> {
