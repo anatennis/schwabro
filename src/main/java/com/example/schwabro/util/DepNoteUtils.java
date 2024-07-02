@@ -16,12 +16,14 @@ import java.util.List;
 import java.util.Set;
 
 public class DepNoteUtils {
-    public static String addInfo(Set<DocumentImpl> files, Project project) {
+    public static String addInfo(Set<DocumentImpl> files, Set<String> checkedFiles, Project project) {
         ChangeListManager changeListManager = ChangeListManager.getInstance(project);
         StringBuilder info = new StringBuilder();
 
         for (DocumentImpl doc : files) {
             VirtualFile file = FileDocumentManager.getInstance().getFile(doc);
+            if (!checkedFiles.contains(file.getName()))
+                continue;
             Change change = changeListManager.getChange(file);
             if (change == null) {
                 String changes = doc.getImmutableCharSequence().toString().replace('\n', ',');

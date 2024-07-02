@@ -33,12 +33,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class AddDepNoteListener implements DocumentListener, FileDocumentManagerListener, BranchChangeListener {
     private final Map<String, Set<DocumentImpl>> changedFiles = new LinkedHashMap<>(); //todo remove
@@ -123,29 +123,29 @@ public class AddDepNoteListener implements DocumentListener, FileDocumentManager
 
     private JPanel createControlsPanel(ToolWindow toolWindow) {
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JLabel jLabel1 = new JLabel("These .properties files were changed");
-        jLabel1.setSize(250, 20);
-        controlsPanel.add(jLabel1);
+        JLabel label = new JLabel("These .properties files were changed");
+        label.setSize(250, 20);
+        label.setIcon(AllIcons.FileTypes.Yaml);
+        controlsPanel.add(label);
         controlsPanel.add(Box.createHorizontalStrut(200));
         controlsPanel.add(Box.createVerticalStrut(10));
 
-        DefaultListModel<String> dlm = JBList.createDefaultListModel(
-                changedFiles.get(currentBranchName).stream()
-                        .map(d -> FileDocumentManager.getInstance().getFile(d).getName())
-                        .collect(Collectors.toList())
-        );
+        List<String> filesNames = changedFiles.get(currentBranchName).stream()
+                .map(d -> FileDocumentManager.getInstance().getFile(d).getName())
+                .toList();
         JPanel jPanel = new JPanel();
-        jPanel.setLayout(new BorderLayout());
-
-        JBList<String> list = new JBList<>(dlm);
-        jPanel.add(list);
-        list.setCellRenderer(new DNRenderer());
+        jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.Y_AXIS));
+        JCheckBox[] checkBoxes = new JCheckBox[filesNames.size()];
+        for (int i = 0; i < filesNames.size(); i++) {
+            checkBoxes[i] = new JCheckBox(filesNames.get(i));
+            jPanel.add(checkBoxes[i]);
+        }
 
         controlsPanel.add(jPanel);
         controlsPanel.add(Box.createHorizontalStrut(200));
         controlsPanel.add(Box.createVerticalStrut(10));
         controlsPanel.add(DepNoteWindowContent.createControlsPanel(toolWindow,
-                new AddPropertiesChangesAction(changedFiles.get(currentBranchName), project)));
+                new AddPropertiesChangesAction(changedFiles.get(currentBranchName), checkBoxes, project)));
         return controlsPanel;
     }
 
@@ -162,33 +162,29 @@ public class AddDepNoteListener implements DocumentListener, FileDocumentManager
                 .show(RelativePoint.getNorthWestOf(statusBar.getComponent()));
     }
 
-    public static class DNRenderer extends JLabel implements ListCellRenderer<String> {
-        @Override
-        public Component getListCellRendererComponent(JList<? extends String> list, String value,
-                                                      int index, boolean isSelected, boolean cellHasFocus) {
-            setIcon(AllIcons.FileTypes.Yaml);
-            setHorizontalAlignment(SwingConstants.CENTER);
-            setSize(new Dimension(200, 20));
-            setText(value);
-            return this;
-        }
-    }
-
     public static class AddPropertiesChangesAction implements ActionListener {
         public final Set<DocumentImpl> changedFiles;
+        public final JCheckBox[] checkBoxes;
         public final Project project;
         private final FileSystemTreeImpl fileSystemTree;
 
-        public AddPropertiesChangesAction(Set<DocumentImpl> changedFiles, Project project) {
+        public AddPropertiesChangesAction(Set<DocumentImpl> changedFiles, JCheckBox[] checkBoxes, Project project) {
             this.changedFiles = changedFiles;
             this.project = project;
             FileChooserDescriptor fileChooserDescriptor = new FileChooserDescriptor(true, true, true, true, true, true);
             fileSystemTree = new FileSystemTreeImpl(project, fileChooserDescriptor);
+            this.checkBoxes = checkBoxes;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            AddDepNoteAction.createNewFile(fileSystemTree, project, changedFiles);
+            Set<String>  checkedFiles = new HashSet<>();
+            for (JCheckBox checkBox : checkBoxes) {
+                if (checkBox.isSelected()) {
+                    checkedFiles.add(checkBox.getText());
+                }
+            }
+            AddDepNoteAction.createNewFile(fileSystemTree, project, changedFiles, checkedFiles);
         }
     }
 }

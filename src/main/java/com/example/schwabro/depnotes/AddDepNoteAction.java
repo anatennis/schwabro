@@ -32,7 +32,7 @@ public class AddDepNoteAction extends AnAction {
     public static final String RELEASE = "release";
     private FileSystemTreeImpl fileSystemTree;
     private Project project;
-    static String FILE_TEMPLATE = "/Users/aromanova/Work/Java/schwabro/src/main/resources/templates/template.yaml";
+    static String FILE_TEMPLATE = "src/main/resources/templates/template.yaml";
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
@@ -46,10 +46,10 @@ public class AddDepNoteAction extends AnAction {
     }
 
     public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project) {
-        createNewFile(fileSystemTree, project, null);
+        createNewFile(fileSystemTree, project, null, null);
     }
 
-    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project, Set<DocumentImpl> changedFiles) {
+    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project, Set<DocumentImpl> changedFiles, Set<String> checkedFiles) {
         String newFileName = GitUtils.getTicketName(project) + ".yml";
         String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
                 UIBundle.message("new.file.dialog.title"), null);
@@ -76,7 +76,7 @@ public class AddDepNoteAction extends AnAction {
         }
         Collection<VirtualFile> branchFolder = FilenameIndex.getVirtualFilesByName(releaseBranchFolder, GlobalSearchScope.allScope(project));
         failReason = fileSystemTree.createNewFile(branchFolder.iterator().next(), newFileName, YAMLFileType.YML,
-                createDNTemplate(project, changedFiles));
+                createDNTemplate(project, changedFiles, checkedFiles));
         if (failReason != null) {
             if (!failReason.getMessage().contains("already exists"))
                 Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
@@ -84,7 +84,7 @@ public class AddDepNoteAction extends AnAction {
         }
     }
 
-    private static String createDNTemplate(Project project, Set<DocumentImpl> files) {
+    private static String createDNTemplate(Project project, Set<DocumentImpl> files, Set<String> checkedFiles) {
         String ticketName = GitUtils.getTicketName(project);
         String result = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
@@ -94,7 +94,7 @@ public class AddDepNoteAction extends AnAction {
                     text = ticketName + ":";
                 }
                 if (text.contains("INFO") && files != null && !files.isEmpty()) {
-                    text = text.replace("    INFO", addInfo(files, project));
+                    text = text.replace("    INFO", addInfo(files, checkedFiles, project));
                 }
                 if (text.contains("INSTRUCTIONS")) {
                     text = "      Add parameter";
