@@ -6,7 +6,6 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.impl.DocumentImpl;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
 import com.intellij.openapi.fileTypes.FileType;
@@ -49,7 +48,8 @@ public class AddDepNoteAction extends AnAction {
         createNewFile(fileSystemTree, project, null, null);
     }
 
-    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project, Set<DocumentImpl> changedFiles, Set<String> checkedFiles) {
+    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project,
+                                     Set<AddDepNoteListener.ChangeInfo> changedFiles, Set<String> checkedFiles) {
         String newFileName = GitUtils.getTicketName(project) + ".yml";
         String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
                 UIBundle.message("new.file.dialog.title"), null);
@@ -84,7 +84,7 @@ public class AddDepNoteAction extends AnAction {
         }
     }
 
-    private static String createDNTemplate(Project project, Set<DocumentImpl> files, Set<String> checkedFiles) {
+    private static String createDNTemplate(Project project, Set<AddDepNoteListener.ChangeInfo> files, Set<String> checkedFiles) {
         String ticketName = GitUtils.getTicketName(project);
         String result = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
@@ -93,7 +93,7 @@ public class AddDepNoteAction extends AnAction {
                 if (text.contains("TOSX")) {
                     text = ticketName + ":";
                 }
-                if (text.contains("INFO") && files != null && !files.isEmpty()) {
+                if (text.contains("INFO") && (files != null && !files.isEmpty())) {
                     text = text.replace("    INFO", addInfo(files, checkedFiles, project));
                 }
                 if (text.contains("INSTRUCTIONS")) {
