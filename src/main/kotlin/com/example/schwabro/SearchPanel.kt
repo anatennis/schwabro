@@ -15,6 +15,9 @@ class SearchPanel(
     private val onSearchAction: Runnable
 ) : JPanel(BorderLayout()) {
 
+    /**
+     * TODO: Use the same layout as directoryPanel in [SchwaBroSettingsConfigurable]
+     */
     init {
         val searchField = JBTextField()
         add(searchField, BorderLayout.NORTH)

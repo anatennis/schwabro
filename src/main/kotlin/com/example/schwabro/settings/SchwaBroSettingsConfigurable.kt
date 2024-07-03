@@ -1,30 +1,37 @@
 package com.example.schwabro.settings
 
 import com.example.schwabro.Constants
+import com.example.schwabro.Utils
+import com.example.schwabro.Utils.Companion.clear
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.project.Project
+import com.intellij.psi.search.scope.packageSet.NamedScopeManager
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.util.maximumHeight
 import java.awt.BorderLayout
 import java.awt.Dimension
 import javax.swing.*
 
-class SchwaBroSettingsConfigurable : Configurable {
+class SchwaBroSettingsConfigurable(private val project: Project) : Configurable {
     private val settings = SchwaBroSettings.getInstance()
     private lateinit var mainPanel: JPanel
-    private lateinit var directoryField: JTextField
+    private lateinit var pathField: JTextField
+    private lateinit var dirNameField: JTextField
     private lateinit var directoriesPanel: JPanel
 
-    private var modifiedDirectories: MutableList<String> = mutableListOf()
+    private var modifiedDirectories: MutableMap<String, String> = mutableMapOf()
 
     override fun createComponent(): JComponent {
         mainPanel = JPanel(BorderLayout())
 
         val inputPanel = JPanel(BorderLayout())
-        directoryField = JTextField()
+        pathField = JTextField()
+        dirNameField = JTextField()
         val addButton = JButton(Constants.ADD).apply {
             addActionListener { this@SchwaBroSettingsConfigurable.addDirectory() }
         }
-        inputPanel.add(directoryField, BorderLayout.CENTER)
+        inputPanel.add(dirNameField, BorderLayout.WEST)
+        inputPanel.add(pathField, BorderLayout.CENTER)
         inputPanel.add(addButton, BorderLayout.EAST)
 
         directoriesPanel = JPanel()
@@ -36,39 +43,45 @@ class SchwaBroSettingsConfigurable : Configurable {
         mainPanel.add(inputPanel, BorderLayout.NORTH)
         mainPanel.add(scrollPane, BorderLayout.CENTER)
 
-        modifiedDirectories = settings.state.directories.toMutableList()
+        modifiedDirectories = settings.state.directories.toMutableMap()
         updateUI()
 
         return mainPanel
     }
 
     private fun addDirectory() {
-        val directory = directoryField.text
-        if (directory.isNotEmpty()) {
-            modifiedDirectories.add(directory)
-            directoryField.text = ""
+        val path = pathField.text
+        val dirName = dirNameField.text
+        if (dirName.isNotEmpty() && path.isNotEmpty()) {
+            modifiedDirectories[dirName] = path
+            pathField.clear()
+            dirNameField.clear()
             updateUI()
         }
     }
 
-    private fun removeDirectory(directory: String) {
-        modifiedDirectories.remove(directory)
+    private fun removeDirectory(dirName: String) {
+        modifiedDirectories.remove(dirName)
         updateUI()
     }
 
     private fun updateUI() {
         directoriesPanel.removeAll()
-        modifiedDirectories.forEach { directory ->
+        modifiedDirectories.forEach { dir ->
             val directoryPanel = JPanel(BorderLayout()).apply {
                 maximumHeight = 40
             }
-            val directoryLabel = JLabel(directory).apply {
+            val nameLabel = JLabel(dir.key).apply {
+                border = BorderFactory.createEmptyBorder(0, 10, 0, 0)
+            }
+            val pathLabel = JLabel(dir.value).apply {
                 border = BorderFactory.createEmptyBorder(0, 20, 0, 0)
             }
             val deleteButton = JButton(Constants.DELETE).apply {
-                addActionListener { removeDirectory(directory) }
+                addActionListener { removeDirectory(dir.key) }
             }
-            directoryPanel.add(directoryLabel, BorderLayout.CENTER)
+            directoryPanel.add(nameLabel, BorderLayout.WEST)
+            directoryPanel.add(pathLabel, BorderLayout.CENTER)
             directoryPanel.add(deleteButton, BorderLayout.EAST)
             directoriesPanel.add(directoryPanel)
         }
@@ -82,6 +95,8 @@ class SchwaBroSettingsConfigurable : Configurable {
 
     override fun apply() {
         settings.setDirectories(modifiedDirectories)
+        val defaultConfigScope = Utils.createDefaultConfigScope(project, settings.state.directories.values.toSet())
+        Utils.setDefaultConfigScope(project, defaultConfigScope)
     }
 
     override fun getDisplayName(): String = Constants.SCHWABRO_SETTINGS

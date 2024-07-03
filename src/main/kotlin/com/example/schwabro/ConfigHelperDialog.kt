@@ -1,6 +1,7 @@
 package com.example.schwabro
 
 import com.example.schwabro.Constants.DEFAULT_CONFIG_SCOPE
+import com.example.schwabro.settings.SchwaBroSettings
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
@@ -67,34 +68,42 @@ class ConfigHelperDialog(
     private fun readProfilesFromModule(moduleName: String): Set<String> {
         val moduleManager = ModuleManager.getInstance(project)
         val uniqueProfiles = mutableSetOf<String>()
-
-        when (moduleName) {
-            Constants.MODULES_ALL -> {
-                for (module in moduleManager.modules) {
-                    val moduleRootManager = ModuleRootManager.getInstance(module)
-                    for (root in moduleRootManager.contentRoots) {
+        val userDefinedDirs = SchwaBroSettings.getInstance().state.directories
+        if (moduleName == Constants.MODULES_ALL) {
+            moduleManager.modules
+                .map { ModuleRootManager.getInstance(it) }
+                .forEach {
+                    for (root in it.contentRoots) {
                         val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
                         if (defaultConfigsDir != null) {
                             uniqueProfiles.addAll(retrieveConfigProfilesFromDir(defaultConfigsDir))
                         }
                     }
                 }
+            userDefinedDirs.forEach {
+                val basePath = Paths.get(project.basePath!!)
+                uniqueProfiles.addAll(
+                    retrieveConfigProfilesFromDir(
+                        LocalFileSystem.getInstance().findFileByNioFile(basePath.resolve(Paths.get(it.value)))!!
+                    )
+                )
             }
-            //todo dopilit'
-            Constants.TOP_LEVEL_MODULE -> {
-                val topProfiles =
-                    retrieveConfigProfilesFromDir(Utils.getDirectoryByName(Paths.get(project.basePath!!))!!)
-                uniqueProfiles.addAll(topProfiles)
-            }
-
-            else -> {
-                val module = moduleManager.findModuleByName(moduleName) ?: return emptySet()
-                val moduleRootManager = ModuleRootManager.getInstance(module)
-                for (root in moduleRootManager.contentRoots) {
-                    val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
-                    if (defaultConfigsDir != null) {
-                        uniqueProfiles.addAll(retrieveConfigProfilesFromDir(defaultConfigsDir))
-                    }
+        } else if (userDefinedDirs.containsKey(moduleName)) {
+            //TODO: too many nullables?
+            val dir = userDefinedDirs[moduleName]!!
+            val basePath = Paths.get(project.basePath!!)
+            uniqueProfiles.addAll(
+                retrieveConfigProfilesFromDir(
+                    LocalFileSystem.getInstance().findFileByNioFile(basePath.resolve(Paths.get(dir)))!!
+                )
+            )
+        } else {
+            val module = moduleManager.findModuleByName(moduleName) ?: return emptySet()
+            val moduleRootManager = ModuleRootManager.getInstance(module)
+            for (root in moduleRootManager.contentRoots) {
+                val defaultConfigsDir = Utils.lookForDefaultConfigsDir(root)
+                if (defaultConfigsDir != null) {
+                    uniqueProfiles.addAll(retrieveConfigProfilesFromDir(defaultConfigsDir))
                 }
             }
         }
@@ -114,8 +123,10 @@ class ConfigHelperDialog(
         return profiles
     }
 
+    //TODO: use better naming
     private fun replace(newValue: String) {
-        fileListRenderer.items.forEach { item ->
+        val fileItemsToReplaceIn = fileListRenderer.getSelectedValues().ifEmpty { fileListRenderer.items }
+        fileItemsToReplaceIn.forEach { item ->
             val tfn = Paths.get(project.basePath ?: "").resolve(item.fileName).toString()
             val virtualFile = LocalFileSystem.getInstance().findFileByPath(tfn)
             if (virtualFile != null) {
@@ -147,6 +158,8 @@ class ConfigHelperDialog(
         FileDocumentManager.getInstance().saveDocument(document)
     }
 
+    //TODO[1]: use better naming
+    //TODO[2]: MAIN FEATURE CHANGE: Look not only for files that contain specified property. It should return ALL matched files according to module + profiles. If file doesn't have property, value should be <not_specified>
     private fun search(selectedItem: String): List<FileListItem> {
         val results = ConcurrentHashMap<String, FileListItem>()
 
@@ -156,26 +169,15 @@ class ConfigHelperDialog(
             val searchHelper = PsiSearchHelper.getInstance(project)
             val processor = TextOccurenceProcessor { element, off ->
 
-
                 val module = ModuleUtilCore.findModuleForPsiElement(element) ?: return@TextOccurenceProcessor true
-                if (module.name != selectedItem && selectedItem != Constants.MODULES_ALL) return@TextOccurenceProcessor true
+                if (module.name != selectedItem && selectedItem != Constants.MODULES_ALL && !dialogModel.userDefinedModules.contains(selectedItem)) return@TextOccurenceProcessor true
                 val containingFile = element.containingFile
 
-                var hasProfiles = false
-                val selectedProfiles = getSelectedProfiles()
-                if (selectedProfiles.isNotEmpty()) {
-                    selectedProfiles.forEach {
-                        hasProfiles = hasProfiles || (containingFile.name.contains(it))
-                    }
-                } else {
-                    hasProfiles = true
-                }
-                if (!hasProfiles) return@TextOccurenceProcessor true
+                if (!isFileNameContainsSpecifiedProfiles(containingFile)) return@TextOccurenceProcessor true
                 if (!isOffsetAtLineStart(containingFile, off)) return@TextOccurenceProcessor true
                 val filePath = getRelativePath(containingFile.virtualFile)
                 val value = element.text.split("=")[1].ifEmpty { "<empty>" }
                 results[filePath] = FileListItem(filePath, value, getLineNumber(containingFile, off))
-
                 true
             }
 
@@ -184,6 +186,7 @@ class ConfigHelperDialog(
                 NamedScopeManager.getScope(project, DEFAULT_CONFIG_SCOPE)!!,
                 false
             )
+            NamedScopeManager.getInstance(project)
             searchHelper.processElementsWithWord(
                 processor,
                 searchScope,
@@ -194,6 +197,19 @@ class ConfigHelperDialog(
         }
 
         return results.map { it.value }
+    }
+
+    private fun isFileNameContainsSpecifiedProfiles(containingFile: PsiFile): Boolean {
+        var hasProfiles = false
+        val selectedProfiles = getSelectedProfiles()
+        if (selectedProfiles.isNotEmpty()) {
+            selectedProfiles.forEach {
+                hasProfiles = hasProfiles || (containingFile.name.contains(it))
+            }
+        } else {
+            hasProfiles = true
+        }
+        return hasProfiles
     }
 
     private fun isOffsetAtLineStart(psiFile: PsiFile, offset: Int): Boolean {
@@ -302,7 +318,7 @@ class ConfigHelperDialog(
         val panel = JPanel(BorderLayout())
         panel.border = BorderFactory.createTitledBorder(Constants.MODULES)
 
-        modulesComboBox = ComboBox(dialogModel.modules.toTypedArray())
+        modulesComboBox = ComboBox(dialogModel.getAllModules())
         modulesComboBox.addActionListener {
             val selectedItem = modulesComboBox.selectedItem as String
             dialogModel.profiles.clear()
@@ -340,4 +356,8 @@ class ConfigHelperDialog(
         return (profilesPanel.components[0] as JPanel).components.filter { (it as JCheckBox).isSelected }
             .map { (it as JCheckBox).text }
     }
+}
+
+private fun DialogModel.getAllModules(): Array<String> {
+    return modules.toMutableList().apply { addAll(userDefinedModules) }.toTypedArray()
 }

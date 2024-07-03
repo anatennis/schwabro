@@ -12,7 +12,7 @@ class SchwaBroSettings : PersistentStateComponent<SchwaBroSettings.State> {
     private var state = State()
 
     data class State(
-        var directories: MutableList<String> = mutableListOf()
+        var directories: MutableMap<String, String> = mutableMapOf()
     )
 
     override fun getState(): State = state
@@ -21,9 +21,9 @@ class SchwaBroSettings : PersistentStateComponent<SchwaBroSettings.State> {
         this.state = state
     }
 
-    fun setDirectories(directories: List<String>) {
+    fun setDirectories(directories: Map<String, String>) {
         state.directories.clear()
-        state.directories.addAll(directories)
+        state.directories.putAll(directories)
     }
 
     companion object {

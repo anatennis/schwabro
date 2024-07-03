@@ -16,6 +16,7 @@ import javax.swing.*
 class FileListCellRenderer : ListCellRenderer<FileListItem> {
     private lateinit var fileList: JBList<FileListItem>
     lateinit var items: List<FileListItem>
+
     override fun getListCellRendererComponent(
         list: JList<out FileListItem>,
         value: FileListItem,
@@ -89,5 +90,7 @@ class FileListCellRenderer : ListCellRenderer<FileListItem> {
         newItems.forEach { (fileList.model as DefaultListModel<FileListItem>).addElement(it) }
         items = newItems.toList()
     }
+
+    fun getSelectedValues() = fileList.selectedValuesList
 }
 
