@@ -1,7 +1,6 @@
 package com.example.schwabro
 
 import com.example.schwabro.Constants.MODULES_ALL
-import com.example.schwabro.Constants.TOP_LEVEL_MODULE
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.module.ModuleManager
@@ -16,6 +15,7 @@ class ConfigHelperAction : AnAction(), DumbAware {
         val project = e.project ?: return
         val dialogModel = DialogModel(
             getModulesWithDefaults(project),
+            SchwaBroSettings.getInstance().state.directories.keys,
             mutableSetOf()
         )
         val dialog = ConfigHelperDialog(project, dialogModel)
@@ -41,8 +41,6 @@ class ConfigHelperAction : AnAction(), DumbAware {
         }
         return res.apply {
             add(0, MODULES_ALL)
-            if (SchwaBroSettings.getInstance().state.directories.isNotEmpty())
-                add(1, TOP_LEVEL_MODULE)
         }
     }
 }
