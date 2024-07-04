@@ -1,33 +1,51 @@
 package com.example.schwabro.util;
 
+import com.example.schwabro.depnotes.AddDepNoteAction;
+import com.example.schwabro.depnotes.ChangeInfo;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
-import com.intellij.openapi.editor.impl.DocumentImpl;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.icons.AllIcons;
+import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
+import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.vcs.changes.Change;
 import com.intellij.openapi.vcs.changes.ChangeListManager;
 import com.intellij.openapi.vcs.changes.ContentRevision;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.search.FilenameIndex;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.ui.UIBundle;
+import org.jetbrains.annotations.NonNls;
+import org.jetbrains.annotations.NotNull;
 
+import javax.swing.*;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public class DepNoteUtils {
-    public static String addInfo(Set<DocumentImpl> files, Set<String> checkedFiles, Project project) {
+
+    private static String FILE_TEMPLATE = "/src/main/resources/templates/template.yaml";
+
+    public static String addInfo(Set<ChangeInfo> files, Set<String> checkedFiles, Project project) {
         ChangeListManager changeListManager = ChangeListManager.getInstance(project);
         StringBuilder info = new StringBuilder();
-
-        for (DocumentImpl doc : files) {
-            VirtualFile file = FileDocumentManager.getInstance().getFile(doc);
-            if (!checkedFiles.contains(file.getName()))
+        for (ChangeInfo doc : files) {
+            if (!checkedFiles.contains(doc.getFileName()))
                 continue;
-            Change change = changeListManager.getChange(file);
+            Change change = doc.getChange() == null ? changeListManager.getChange(doc.getFile()) : doc.getChange();
+            if (change == null && doc.isFirstTimeChanged()) {
+                String changesString = doc.getContent().replace('\n', ',');
+                return info.append("    New properties: ").append(changesString).toString();
+            }
             if (change == null) {
-                String changes = doc.getImmutableCharSequence().toString().replace('\n', ',');
-                return info.append("    New properties: ").append(changes).toString();
+                return info.toString();
             }
             ContentRevision beforeRevision = change.getBeforeRevision();
             ContentRevision afterRevision = change.getAfterRevision();
@@ -36,22 +54,20 @@ public class DepNoteUtils {
                     String beforeContent = beforeRevision.getContent();
                     String afterContent = afterRevision.getContent();
                     if (beforeContent != null && afterContent != null) {
-                        calculateDifferences(beforeContent, afterContent, change, info);
+                        calculateDifferences(beforeContent, afterContent, info);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-
         }
         return info.toString();
     }
 
-    private static void calculateDifferences(String beforeContent, String afterContent, Change change, StringBuilder info)
+    private static void calculateDifferences(String beforeContent, String afterContent, StringBuilder info)
             throws DiffException {
         List<String> beforeLines = Arrays.asList(beforeContent.split("\n"));
         List<String> afterLines = Arrays.asList(afterContent.split("\n"));
-        System.out.println("File: " + change.getVirtualFile().getPath());
         DiffRowGenerator generator = DiffRowGenerator.create()
                 .showInlineDiffs(true)
                 .inlineDiffByWord(true)
@@ -82,4 +98,101 @@ public class DepNoteUtils {
         return text.replaceAll(spanTagPattern, "");
     }
 
+    public static String createDNTemplate(Project project, Set<ChangeInfo> files, Set<String> checkedFiles) {
+        String ticketName = GitUtils.getTicketName(project);
+        String result = "";
+        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
+            String text;
+            while ((text = reader.readLine()) != null) {
+                if (text.contains("TOSX")) {
+                    text = ticketName + ":";
+                }
+                if (text.contains("INFO") && (files != null && !files.isEmpty())) {
+                    text = text.replace("    INFO", addInfo(files, checkedFiles, project));
+                }
+                if (text.contains("INSTRUCTIONS")) {
+                    text = "      Add parameter";
+                }
+
+                result = result.concat(text + '\n');
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+
+    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project,
+                                     Set<ChangeInfo> changedFiles, Set<String> checkedFiles) {
+        String newFileName = GitUtils.getTicketName(project) + ".yml";
+        String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
+                UIBundle.message("new.file.dialog.title"), null);
+        if (releaseBranchFolder == null) {
+            return;
+        }
+        releaseBranchFolder = releaseBranchFolder.strip();
+        while (true) {
+            if (releaseBranchFolder.isEmpty()) {
+                Messages.showMessageDialog(UIBundle.message("create.new.file.file.name.cannot.be.empty.error.message"),
+                        UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+            } else {
+                break;
+            }
+        }
+
+        Collection<VirtualFile> release = FilenameIndex.getVirtualFilesByName(AddDepNoteAction.RELEASE, GlobalSearchScope.allScope(project));
+        VirtualFile releaseFolder = release.iterator().next();
+        Exception failReason = fileSystemTree.createNewFolder(releaseFolder, releaseBranchFolder);
+        if (failReason != null) {
+            if (!failReason.getMessage().contains("already exists"))
+                Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
+                        UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+        }
+        Collection<VirtualFile> branchFolder = FilenameIndex.getVirtualFilesByName(releaseBranchFolder, GlobalSearchScope.allScope(project));
+        failReason = fileSystemTree.createNewFile(branchFolder.iterator().next(), newFileName, YAMLFileType.YML,
+                createDNTemplate(project, changedFiles, checkedFiles));
+        if (failReason != null) {
+            if (!failReason.getMessage().contains("already exists"))
+                Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
+                        UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
+        }
+    }
+
+    public static final class YAMLFileType implements FileType {
+        public static final YAMLFileType YML = new YAMLFileType();
+        @NonNls
+        public static final String DEFAULT_EXTENSION = "yml";
+
+        private YAMLFileType() {}
+
+        @Override
+        @NotNull
+        public String getName() {
+            return "YAML";
+        }
+
+        @Override
+        @NotNull
+        public String getDescription() {
+            return "Filetype.yaml.description";
+        }
+
+        @Override
+        @NotNull
+        public String getDefaultExtension() {
+            return DEFAULT_EXTENSION;
+        }
+
+        @Override
+        @NotNull
+        public Icon getIcon() {
+            return AllIcons.FileTypes.Yaml;
+        }
+
+        @Override
+        public boolean isBinary() {
+            return false;
+        }
+    }
 }
