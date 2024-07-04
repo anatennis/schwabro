@@ -21,9 +21,8 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -101,7 +100,10 @@ public class DepNoteUtils {
     public static String createDNTemplate(Project project, Set<ChangeInfo> files, Set<String> checkedFiles) {
         String ticketName = GitUtils.getTicketName(project);
         String result = "";
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {
+        InputStream is = DepNoteUtils.class.getResourceAsStream("/templates/template.yaml");
+        if (is == null)
+            throw new IllegalStateException("template wasn't found");
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
             String text;
             while ((text = reader.readLine()) != null) {
                 if (text.contains("TOSX")) {
@@ -164,7 +166,8 @@ public class DepNoteUtils {
         @NonNls
         public static final String DEFAULT_EXTENSION = "yml";
 
-        private YAMLFileType() {}
+        private YAMLFileType() {
+        }
 
         @Override
         @NotNull
