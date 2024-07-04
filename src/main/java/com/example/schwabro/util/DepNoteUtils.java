@@ -21,8 +21,10 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.io.*;
-import java.net.URL;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -30,7 +32,7 @@ import java.util.Set;
 
 public class DepNoteUtils {
 
-    private static String FILE_TEMPLATE = "/src/main/resources/templates/template.yaml";
+    private static String DN_TEMPLATE = "/templates/template.yaml";
 
     public static String addInfo(Set<ChangeInfo> files, Set<String> checkedFiles, Project project) {
         ChangeListManager changeListManager = ChangeListManager.getInstance(project);
@@ -100,7 +102,7 @@ public class DepNoteUtils {
     public static String createDNTemplate(Project project, Set<ChangeInfo> files, Set<String> checkedFiles) {
         String ticketName = GitUtils.getTicketName(project);
         String result = "";
-        InputStream is = DepNoteUtils.class.getResourceAsStream("/templates/template.yaml");
+        InputStream is = DepNoteUtils.class.getResourceAsStream(DN_TEMPLATE);
         if (is == null)
             throw new IllegalStateException("template wasn't found");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
@@ -125,13 +127,13 @@ public class DepNoteUtils {
         return result;
     }
 
-    public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project,
+    public static Collection<VirtualFile> createNewFile(final FileSystemTreeImpl fileSystemTree, Project project,
                                      Set<ChangeInfo> changedFiles, Set<String> checkedFiles) {
         String newFileName = GitUtils.getTicketName(project) + ".yml";
         String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
                 UIBundle.message("new.file.dialog.title"), null);
         if (releaseBranchFolder == null) {
-            return;
+            return null;
         }
         releaseBranchFolder = releaseBranchFolder.strip();
         while (true) {
@@ -159,6 +161,7 @@ public class DepNoteUtils {
                 Messages.showMessageDialog(UIBundle.message("create.new.file.could.not.create.file.error.message", newFileName),
                         UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
         }
+        return FilenameIndex.getVirtualFilesByName(newFileName, GlobalSearchScope.allScope(project));
     }
 
     public static final class YAMLFileType implements FileType {

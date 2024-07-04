@@ -4,11 +4,13 @@ import com.example.schwabro.util.DepNoteUtils;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.vcs.changes.Change;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -25,6 +27,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -173,8 +176,11 @@ public class DepNoteWindowContent implements ToolWindowContent {
                 }
             }
             if (!checkedFiles.isEmpty()) {
-                DepNoteUtils.createNewFile(fileSystemTree, project, changedFiles, checkedFiles);
+                Collection<VirtualFile> newFile = DepNoteUtils.createNewFile(fileSystemTree, project, changedFiles, checkedFiles);
                 toolWindow.hide();
+                if (newFile != null && !newFile.isEmpty()) {
+                    FileEditorManager.getInstance(project).openFile(newFile.iterator().next(), true);
+                }
             } else {
                 Messages.showMessageDialog(changedFiles == null ? "No .properties files were changed" : "Please, choose .properties file",
                         UIBundle.message("error.dialog.title"), Messages.getErrorIcon());
