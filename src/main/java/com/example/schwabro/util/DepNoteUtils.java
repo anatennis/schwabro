@@ -1,6 +1,6 @@
 package com.example.schwabro.util;
 
-import com.example.schwabro.depnotes.AddDepNoteListener;
+import com.example.schwabro.depnotes.ChangeInfo;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
@@ -15,16 +15,19 @@ import java.util.Set;
 
 public class DepNoteUtils {
 
-    public static String addInfo(Set<AddDepNoteListener.ChangeInfo> files, Set<String> checkedFiles, Project project) {
+    public static String addInfo(Set<ChangeInfo> files, Set<String> checkedFiles, Project project) {
         ChangeListManager changeListManager = ChangeListManager.getInstance(project);
         StringBuilder info = new StringBuilder();
-        for (AddDepNoteListener.ChangeInfo doc : files) {
+        for (ChangeInfo doc : files) {
             if (!checkedFiles.contains(doc.getFileName()))
                 continue;
             Change change = doc.getChange() == null ? changeListManager.getChange(doc.getFile()) : doc.getChange();
-            if (change == null) {
+            if (change == null && doc.isFirstTimeChanged()) {
                 String changesString = doc.getContent().replace('\n', ',');
                 return info.append("    New properties: ").append(changesString).toString();
+            }
+            if (change == null) {
+                return info.toString();
             }
             ContentRevision beforeRevision = change.getBeforeRevision();
             ContentRevision afterRevision = change.getAfterRevision();

@@ -49,7 +49,7 @@ public class AddDepNoteAction extends AnAction {
     }
 
     public static void createNewFile(final FileSystemTreeImpl fileSystemTree, Project project,
-                                     Set<AddDepNoteListener.ChangeInfo> changedFiles, Set<String> checkedFiles) {
+                                     Set<ChangeInfo> changedFiles, Set<String> checkedFiles) {
         String newFileName = GitUtils.getTicketName(project) + ".yml";
         String releaseBranchFolder = Messages.showInputDialog("Please enter release branch name",
                 UIBundle.message("new.file.dialog.title"), null);
@@ -84,7 +84,7 @@ public class AddDepNoteAction extends AnAction {
         }
     }
 
-    private static String createDNTemplate(Project project, Set<AddDepNoteListener.ChangeInfo> files, Set<String> checkedFiles) {
+    private static String createDNTemplate(Project project, Set<ChangeInfo> files, Set<String> checkedFiles) {
         String ticketName = GitUtils.getTicketName(project);
         String result = "";
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_TEMPLATE))) {

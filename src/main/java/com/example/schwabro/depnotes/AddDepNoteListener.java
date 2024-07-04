@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.example.schwabro.depnotes.DepNoteWindowContent.updateToolWindowContent;
 
@@ -54,14 +55,17 @@ public class AddDepNoteListener implements DocumentListener, FileDocumentManager
             changedFiles.compute(currentBranchName, (k, v) -> {
                 if (v == null)
                     v = new HashSet<>();
-                Change change = null;
+                boolean fileWasAdded = false;
                 for (Map.Entry<String, Change> changeEntry : changeMap.entrySet()) {
-                    if (file.getName().equals(changeEntry.getKey()))
-                        change = changeEntry.getValue();
-                    else
-                        v.add(new ChangeInfo(null, changeEntry.getKey(), changeEntry.getValue(), null));
+                    if (file.getName().equals(changeEntry.getKey())) {
+                        fileWasAdded = true;
+                        v.add(new ChangeInfo(file, file.getName(), changeEntry.getValue(), document.getText()));
+                    } else {
+                        v.add(new ChangeInfo(changeEntry.getValue().getVirtualFile(), changeEntry.getKey(), changeEntry.getValue(), null));
+                    }
                 }
-                v.add(new ChangeInfo(file, file.getName(), change, document.getText()));
+                if (!fileWasAdded)
+                    v.add(new ChangeInfo(file, file.getName(), null, document.getText()));
                 return v;
             });
             updateToolWindowContent(changedFiles, currentBranchName, project);
@@ -73,7 +77,15 @@ public class AddDepNoteListener implements DocumentListener, FileDocumentManager
             return false;
         }
         Set<ChangeInfo> files = changedFiles.get(currentBranchName);
-        return files.stream().anyMatch(f -> f.getFileName().equals(file.getName()));
+        Set<ChangeInfo> changedFiles = files.stream().filter(f -> f.getFileName().equals(file.getName()))
+                .collect(Collectors.toSet());
+        if (changedFiles.isEmpty()) {
+            return false;
+        }
+        for (ChangeInfo changeInfo : changedFiles) {
+            changeInfo.setFirstTimeChanged(false);
+        }
+        return true;
     }
 
     @Override
@@ -96,52 +108,6 @@ public class AddDepNoteListener implements DocumentListener, FileDocumentManager
             changedFiles.put(branchName, new HashSet<>());
         }
         currentBranchName = branchName;
-    }
-
-    public static class ChangeInfo {
-        VirtualFile file;
-        String fileName;
-        Change change;
-        String content;
-
-        public ChangeInfo(VirtualFile file, String fileName, Change change, String content) {
-            this.file = file;
-            this.fileName = fileName;
-            this.change = change;
-            this.content = content;
-        }
-
-        public String getFileName() {
-            return fileName;
-        }
-
-        public void setFileName(String fileName) {
-            this.fileName = fileName;
-        }
-
-        public VirtualFile getFile() {
-            return file;
-        }
-
-        public void setFile(VirtualFile file) {
-            this.file = file;
-        }
-
-        public Change getChange() {
-            return change;
-        }
-
-        public void setChange(Change change) {
-            this.change = change;
-        }
-
-        public String getContent() {
-            return content;
-        }
-
-        public void setContent(String content) {
-            this.content = content;
-        }
     }
 
 }

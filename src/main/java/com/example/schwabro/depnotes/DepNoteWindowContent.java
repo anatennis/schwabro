@@ -52,11 +52,11 @@ public class DepNoteWindowContent implements ToolWindowContent {
 
         contentPanel.add(Box.createHorizontalStrut(200));
         contentPanel.add(Box.createVerticalStrut(10));
-        Set<AddDepNoteListener.ChangeInfo> changeInfos = null;
+        Set<ChangeInfo> changeInfos = null;
         if (hasChanges) {
             contentPanel.add(createFilesTable(changes.keySet(), checkBoxes));
             changeInfos = changes.entrySet().stream()
-                    .map(e -> new AddDepNoteListener.ChangeInfo(e.getValue().getVirtualFile(), e.getKey(), e.getValue(), null))
+                    .map(e -> new ChangeInfo(e.getValue().getVirtualFile(), e.getKey(), e.getValue(), null))
                     .collect(Collectors.toSet());
         }
         contentPanel.add(createControlsPanel(toolWindow,
@@ -91,7 +91,7 @@ public class DepNoteWindowContent implements ToolWindowContent {
         toolWindow.hide();
     }
 
-    public static void updateToolWindowContent(Map<String, Set<AddDepNoteListener.ChangeInfo>> changedFiles, String currentBranchName, Project project) {
+    public static void updateToolWindowContent(Map<String, Set<ChangeInfo>> changedFiles, String currentBranchName, Project project) {
         ToolWindow depNote = ToolWindowManager.getInstance(project).getToolWindow("DepNote");
         depNote.setIcon(AllIcons.General.Warning);
         ContentManager contentManager = depNote.getContentManager();
@@ -99,24 +99,20 @@ public class DepNoteWindowContent implements ToolWindowContent {
         Content content = contentManager.getContents()[0];
         contentManager.removeContent(content, false);
         Content buttonContent = ContentFactory.getInstance().createContent(
-                createControlsPanel(changedFiles, currentBranchName, depNote, project),
+                createControlsPanel(changedFiles, currentBranchName, depNote),
                 "Modified .properties Files", false);
         contentManager.addContent(buttonContent, 0);
     }
 
-    private static JPanel createControlsPanel(Map<String, Set<AddDepNoteListener.ChangeInfo>> changedFiles, String currentBranchName,
-                                              ToolWindow toolWindow, Project project) {
+    private static JPanel createControlsPanel(Map<String, Set<ChangeInfo>> changedFiles, String currentBranchName,
+                                              ToolWindow toolWindow) {
         JPanel controlsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-       // controlsPanel.setLayout(new BoxLayout(controlsPanel, BoxLayout.Y_AXIS));
-        //JLabel label = new JLabel("These .properties files were changed");
-       // changedLabel.setSize(250, 20);
-        //label.setIcon(AllIcons.FileTypes.Yaml);
         controlsPanel.add(changedLabel);
         controlsPanel.add(Box.createHorizontalStrut(200));
         controlsPanel.add(Box.createVerticalStrut(10));
 
         Set<String> filesNames = changedFiles.get(currentBranchName).stream()
-                .map(AddDepNoteListener.ChangeInfo::getFileName)
+                .map(ChangeInfo::getFileName)
                 .collect(Collectors.toSet());
         ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
         controlsPanel.add(createFilesTable(filesNames, checkBoxes));
@@ -152,13 +148,13 @@ public class DepNoteWindowContent implements ToolWindowContent {
     }
 
     public static class AddPropertiesChangesAction implements ActionListener {
-        public final Set<AddDepNoteListener.ChangeInfo> changedFiles;
+        public final Set<ChangeInfo> changedFiles;
         public final List<JCheckBox> checkBoxes;
         public final Project project;
         private final ToolWindow toolWindow;
         private final FileSystemTreeImpl fileSystemTree;
 
-        public AddPropertiesChangesAction(Set<AddDepNoteListener.ChangeInfo> changedFiles, List<JCheckBox> checkBoxes, ToolWindow toolWindow) {
+        public AddPropertiesChangesAction(Set<ChangeInfo> changedFiles, List<JCheckBox> checkBoxes, ToolWindow toolWindow) {
             this.changedFiles = changedFiles;
             this.project = toolWindow.getProject();
             this.toolWindow = toolWindow;
