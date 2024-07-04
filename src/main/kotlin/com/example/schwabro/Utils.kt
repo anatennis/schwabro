@@ -33,7 +33,7 @@ class Utils {
             return file
         }
 
-        fun removeDefaultConfigScope(scopeManager: NamedScopeManager) {
+        private fun removeDefaultConfigScope(scopeManager: NamedScopeManager) {
             val scopeToRemove = scopeManager.scopes.find { it.scopeId == Constants.DEFAULT_CONFIG_SCOPE }
             if (scopeToRemove == null)
                 return
@@ -42,13 +42,13 @@ class Utils {
             scopeManager.scopes = scopes.toTypedArray()
         }
 
-        fun createDefaultConfigScope(project: Project, customDirs: Set<String>): NamedScope {
+        fun createDefaultConfigScope(customDirs: Set<String>): NamedScope {
             val customDirsStr = customDirs.joinToString(separator = "||") { "file:$it/*.properties" }.run {
                 if (isNotEmpty()) "||$this" else this
             }
             val customPackageSet = PackageSetFactory.getInstance()
                 .compile("file:*default_configs/*.properties||file:ode_configs/*.properties||file:system/*.properties$customDirsStr")
-            return NamedScope("Default configs", AllIcons.Ide.LocalScope, customPackageSet)
+            return NamedScope(Constants.DEFAULT_CONFIG_SCOPE, AllIcons.Ide.LocalScope, customPackageSet)
         }
 
         fun setDefaultConfigScope(project: Project, namedScope: NamedScope) {

@@ -34,7 +34,7 @@ class FileListCellRenderer : ListCellRenderer<FileListItem> {
 //        fileNameLabel.preferredSize = Dimension(100, 20)
         panel.add(scrollPaneFile, BorderLayout.WEST)
 
-        val stringLabel = JLabel(value.longString)
+        val stringLabel = JLabel(value.propertyValue)
         val scrollPane = JBScrollPane(stringLabel)
         scrollPane.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         scrollPane.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_NEVER
