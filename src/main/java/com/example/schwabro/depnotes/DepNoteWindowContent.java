@@ -26,6 +26,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -58,7 +60,10 @@ public class DepNoteWindowContent implements ToolWindowContent {
         contentPanel.add(Box.createVerticalStrut(10));
         Set<ChangeInfo> changeInfos = null;
         if (hasChanges) {
-            contentPanel.add(createFilesTable(changes.keySet(), checkBoxes));
+            contentPanel.add(createFilesTable(
+                    changes.values().stream().map(Change::getVirtualFile).collect(Collectors.toSet()),
+                    checkBoxes, toolWindow.getProject()
+            ));
             changeInfos = changes.entrySet().stream()
                     .map(e -> new ChangeInfo(e.getValue().getVirtualFile(), e.getKey(), e.getValue(), null))
                     .collect(Collectors.toSet());
@@ -115,11 +120,11 @@ public class DepNoteWindowContent implements ToolWindowContent {
         controlsPanel.add(Box.createHorizontalStrut(200));
         controlsPanel.add(Box.createVerticalStrut(10));
 
-        Set<String> filesNames = changedFiles.get(currentBranchName).stream()
-                .map(ChangeInfo::getFileName)
+        Set<VirtualFile> filesNames = changedFiles.get(currentBranchName).stream()
+                .map(ChangeInfo::getFile)
                 .collect(Collectors.toSet());
         ArrayList<JCheckBox> checkBoxes = new ArrayList<>();
-        controlsPanel.add(createFilesTable(filesNames, checkBoxes));
+        controlsPanel.add(createFilesTable(filesNames, checkBoxes, toolWindow.getProject()));
         controlsPanel.add(Box.createHorizontalStrut(200));
         controlsPanel.add(Box.createVerticalStrut(10));
         controlsPanel.add(DepNoteWindowContent.createControlsPanel(toolWindow,
@@ -127,11 +132,21 @@ public class DepNoteWindowContent implements ToolWindowContent {
         return controlsPanel;
     }
 
-    public static JPanel createFilesTable(Set<String> filesNames, List<JCheckBox> checkboxes) {
+    public static JPanel createFilesTable(Set<VirtualFile> filesNames, List<JCheckBox> checkboxes, Project project) {
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.Y_AXIS));
-        for (String fileName : filesNames) {
-            JCheckBox jCheckBox = new JCheckBox(fileName);
+        for (VirtualFile file : filesNames) {
+            JCheckBox jCheckBox = new JCheckBox(file.getName());
+            jCheckBox.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        if (project != null) {
+                            FileEditorManager.getInstance(project).openFile(file, true);
+                        }
+                    }
+                }
+            });
             checkboxes.add(jCheckBox);
             jPanel.add(jCheckBox);
         }

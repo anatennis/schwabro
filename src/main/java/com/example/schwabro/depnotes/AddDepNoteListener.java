@@ -28,8 +28,7 @@ import java.util.stream.Collectors;
 import static com.example.schwabro.depnotes.DepNoteWindowContent.updateToolWindowContent;
 
 public class AddDepNoteListener implements DocumentListener, FileDocumentManagerListener, BranchChangeListener {
-    private final Map<String, Set<ChangeInfo>> changedFiles = new LinkedHashMap<>(); //todo remove
-
+    private final Map<String, Set<ChangeInfo>> changedFiles = new LinkedHashMap<>();
     private Project project;
     private String currentBranchName;
 
