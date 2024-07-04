@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Glossary xmlns="http://www.javacore.ru/schemas/">
+    <term id="Bracket Order">
+        <word>Bracket Order</word>
+        <definition>An order designed to help limit loss and lock in profit by "bracketing" an order with two
+            opposite-side orders.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/b/bracketedsellorder.asp</hyperlink>
+    </term>
+    <term id="Butterfly Spread">
+        <word>Butterfly Spread</word>
+        <definition>Involves a combination of buying and selling multiple options to create a spread with three strike
+            prices.
+            - Example: Buy one call option at a lower strike price, sell two call options at a middle strike price, and
+            buy one call option at a higher strike price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/b/butterflyspread.asp</hyperlink>
+    </term>
+    <term id="Calendar Spread">
+        <word>Calendar Spread</word>
+        <definition>Involves buying and selling options of the same type and strike price but with different expiration
+            dates.
+            - Example: Buy a call option with a later expiration date and sell a call option with an earlier expiration
+            date.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/c/calendarspread.asp</hyperlink>
+    </term>
+    <term id="Call Option">
+        <word>Call Option</word>
+        <definition>Gives the holder the right to buy the underlying asset.</definition>
+        <hyperlink>https://www.investopedia.com/terms/c/calloption.asp</hyperlink>
+    </term>
+    <term id="Covered Call">
+        <word>Covered Call</word>
+        <definition>Involves holding a long position in an underlying asset and selling a call option on that asset.
+            - Example: Own the underlying stock and sell a call option on the same stock.
+        </definition>
+        <hyperlink>https://www.investopedia.com/articles/optioninvestor/08/covered-call.asp</hyperlink>
+    </term>
+    <term id="Diagonal Spread">
+        <word>Diagonal Spread</word>
+        <definition>Involves buying and selling options of the same type but with different strike prices and expiration
+            dates.
+            - Example: Buy a call option with a higher strike price and later expiration date, and sell a call option
+            with a lower strike price and earlier expiration date.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/d/diagonalspread.asp</hyperlink>
+    </term>
+    <term id="Execution">
+        <word>Execution</word>
+        <definition>The process of completing an order. It can involve various states such as NEW, ACCEPTED, WORKING,
+            FILLED, CANCELED and REJECTED.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/e/execution.asp</hyperlink>
+    </term>
+    <term id="Futures">
+        <word>Futures</word>
+        <definition>A futures contract is a standardized agreement to buy or sell an asset at a predetermined price at a
+            specified time in the future. Futures contracts can be used for hedging or speculative purposes. They are
+            traded on exchanges and are highly liquid
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/f/futurescontract.asp</hyperlink>
+    </term>
+    <term id="Futures Option">
+        <word>Futures Option</word>
+        <definition>Futures options are options on futures contracts. They give the holder the right, but not the
+            obligation, to enter into a futures contract at a specified price before the option expires. This combines
+            the features of both futures and options, providing flexibility and leverage.
+        </definition>
+        <hyperlink>kll</hyperlink>
+    </term>
+    <term id="IF-THEN Strategy">
+        <word>IF-THEN Strategy (or Order-Sends-Order)</word>
+        <definition>A strategy where the execution of one order triggers another order.</definition>
+        <hyperlink>https://www.investopedia.com/order-sends-order-oso-definition-5190104</hyperlink>
+    </term>
+    <term id="Iron Butterfly">
+        <word>Iron Butterfly</word>
+        <definition>Involves selling a straddle and buying a strangle.
+            - Example: Sell a call and a put option at the same strike price, and buy a call option at a higher strike
+            price and a put option at a lower strike price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/articles/active-trading/030314/what-iron-butterfly-option-strategy.asp
+        </hyperlink>
+    </term>
+    <term id="Iron Condor">
+        <word>Iron Condor</word>
+        <definition>Involves selling a call and a put option at one strike price and buying a call and a put option at
+            different strike prices.
+            - Example: Sell a call and a put option at middle strike prices, buy a call option at a higher strike price,
+            and buy a put option at a lower strike price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/i/ironcondor.asp</hyperlink>
+    </term>
+    <term id="Limit Order">
+        <word>Limit Order</word>
+        <definition>An order to buy or sell once the market reaches a specified price</definition>
+        <hyperlink>https://www.investopedia.com/terms/l/limitorder.asp</hyperlink>
+    </term>
+    <term id="Market Order">
+        <word>Market Order</word>
+        <definition>An order instantly executed against a price provided by the broker. It is executed at the current
+            market price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/m/marketorder.asp</hyperlink>
+    </term>
+    <term id="OCO">
+        <word>OCO (One Cancels the Other)</word>
+        <definition>A pair of orders where the execution of one order cancels the other.</definition>
+        <hyperlink>https://www.investopedia.com/terms/o/oco.asp</hyperlink>
+    </term>
+    <term id="Options">
+        <word>Options</word>
+        <definition>An option is a financial derivative that gives the buyer the right, but not the obligation, to buy
+            or sell an underlying asset at a specified price before or at a certain date.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/o/option.asp</hyperlink>
+    </term>
+    <term id="Order">
+        <word>Order</word>
+        <definition>An instruction sent to open or close a transaction if the conditions specified by a user are
+            satisfied. Orders can be market orders or pending orders (limit and stop orders).
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/o/order.asp</hyperlink>
+    </term>
+    <term id="Order Group">
+        <word>Order Group (or Conditional Order)</word>
+        <definition>A combination of single orders linked by particular rules to achieve a specific result. Examples
+            include OCO (One Cancels the Other) and IF-THEN strategies.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/c/conditionalorder.asp</hyperlink>
+    </term>
+    <term id="Protective Put">
+        <word>Protective Put</word>
+        <definition>Involves holding a long position in an underlying asset and buying a put option to protect against a
+            decline in the asset's price.
+            - Example: Own the underlying stock and buy a put option on the same stock.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/p/protective-put.asp</hyperlink>
+    </term>
+    <term id="Put Option">
+        <word>Put Option</word>
+        <definition>Gives the holder the right to sell the underlying asset.</definition>
+        <hyperlink>https://www.investopedia.com/terms/p/putoption.asp</hyperlink>
+    </term>
+    <term id="Stop Order">
+        <word>Stop Order</word>
+        <definition>An order to buy or sell at a certain price in the direction of the implied market movement. It
+            becomes a market order once the stop price is reached.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/s/stoporder.asp</hyperlink>
+    </term>
+    <term id="Straddle">
+        <word>Straddle</word>
+        <definition>Involves buying both a call and a put option with the same strike price and expiration date.
+            - Example: Buy a call and a put option at the same strike price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/s/straddle.asp</hyperlink>
+    </term>
+    <term id="Strangle">
+        <word>Strangle</word>
+        <definition>Involves buying both a call and a put option with different strike prices but the same expiration
+            date.
+            - Example: Buy a call option with a higher strike price and a put option with a lower strike price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/s/strangle.asp</hyperlink>
+    </term>
+    <term id="TIF">
+        <word>Time in Force (TIF)</word>
+        <definition>Indicates how long an order will remain active before it expires. Examples include GTC (Good Till
+            Canceled), DAY, and GTD (Good Till Date).
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/t/timeinforce.asp</hyperlink>
+    </term>
+    <term id="Trailing Stop Order">
+        <word>Trailing Stop Order</word>
+        <definition>Order that moves with the market price to lock in profits while limiting losses.</definition>
+        <hyperlink>https://www.investopedia.com/terms/t/trailingstop.asp</hyperlink>
+    </term>
+    <term id="Vertical Spread">
+        <word>Vertical Spread</word>
+        <definition>Involves buying and selling options of the same type (calls or puts) with different strike prices
+            but the same expiration date.
+            - Example: Buy a call option with a lower strike price and sell a call option with a higher strike price.
+        </definition>
+        <hyperlink>https://www.investopedia.com/terms/v/verticalspread.asp</hyperlink>
+    </term>
+</Glossary>

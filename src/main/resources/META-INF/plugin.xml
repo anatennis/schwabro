@@ -32,6 +32,7 @@
         <projectConfigurable instance="com.example.schwabro.settings.SchwaBroSettingsConfigurable"
                              id="com.example.plugin.settings.MyPluginSettingsConfigurable"
                              displayName="SchwaBro Settings"/>
+        <postStartupActivity implementation="com.example.schwabro.terminology.GlossaryUploader"/>
     </extensions>
     <applicationListeners>
         <listener class="com.example.schwabro.depnotes.AddDepNoteListener"
@@ -73,6 +74,16 @@
         <action id="ShowAllTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.ShowAllTermsAction"
                 text="Show All Terms">
             <add-to-group group-id="HelpMenu" anchor="last"/>
+            <add-to-group group-id="TerminologyContextMenu" anchor="last"/>
+            <add-to-group group-id="SchwaBro.Terminology" anchor="last"/>
+        </action>
+        <action id="AddNewTermAction" class="com.example.schwabro.terminology.actions.contextmenu.AddNewTermAction"
+                text="Add New Term">
+            <add-to-group group-id="TerminologyContextMenu" anchor="last"/>
+            <add-to-group group-id="SchwaBro.Terminology" anchor="last"/>
+        </action>
+        <action id="RemoveMyTermsAction" class="com.example.schwabro.terminology.actions.contextmenu.RemoveMyTermsAction"
+                text="Remove My Terms">
             <add-to-group group-id="TerminologyContextMenu" anchor="last"/>
             <add-to-group group-id="SchwaBro.Terminology" anchor="last"/>
         </action>
