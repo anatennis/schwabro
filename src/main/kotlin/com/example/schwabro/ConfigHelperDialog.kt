@@ -1,25 +1,19 @@
 package com.example.schwabro
 
-import com.example.schwabro.Constants.DEFAULT_CONFIG_SCOPE
 import com.example.schwabro.settings.SchwaBroSettings
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.module.ModuleManager
-import com.intellij.openapi.module.ModuleUtilCore
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.psi.PsiFile
-import com.intellij.psi.search.*
-import com.intellij.psi.search.scope.packageSet.NamedScopeManager
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.ui.util.maximumHeight
-import com.jetbrains.rd.util.ConcurrentHashMap
 import io.ktor.util.*
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -42,6 +36,8 @@ class ConfigHelperDialog(
     private lateinit var profilesPanel: JPanel
     private lateinit var profilesAncestorPanel: JPanel
     private lateinit var fileListRenderer: FileListCellRenderer
+    private val finder = Finder(project)
+    private val filePathProvider = FilePathProvider(project)
 
     init {
         title = Constants.HELPER_DIALOG_TITLE
@@ -58,11 +54,6 @@ class ConfigHelperDialog(
                 addTab("Search", SearchPanel(project) { this@ConfigHelperDialog.close(0, false) })
             }, BorderLayout.CENTER)
         }
-    }
-
-    override fun doOKAction() {
-        replace(propertyValueTextField.text)
-        super.doOKAction()
     }
 
     private fun readProfilesFromModule(moduleName: String): Set<String> {
@@ -89,7 +80,6 @@ class ConfigHelperDialog(
                 )
             }
         } else if (userDefinedDirs.containsKey(moduleName)) {
-            //TODO: too many nullables?
             val dir = userDefinedDirs[moduleName]!!
             val basePath = Paths.get(project.basePath!!)
             uniqueProfiles.addAll(
@@ -123,8 +113,7 @@ class ConfigHelperDialog(
         return profiles
     }
 
-    //TODO: use better naming
-    private fun replace(newValue: String) {
+    private fun replacePropValuesInSelectedFiles(newValue: String) {
         val fileItemsToReplaceIn = fileListRenderer.getSelectedValues().ifEmpty { fileListRenderer.items }
         fileItemsToReplaceIn.forEach { item ->
             val tfn = Paths.get(project.basePath ?: "").resolve(item.fileName).toString()
@@ -158,74 +147,6 @@ class ConfigHelperDialog(
         FileDocumentManager.getInstance().saveDocument(document)
     }
 
-    //TODO[1]: use better naming
-    //TODO[2]: MAIN FEATURE CHANGE: Look not only for files that contain specified property. It should return ALL matched files according to module + profiles. If file doesn't have property, value should be <not_specified>
-    private fun search(selectedItem: String): List<FileListItem> {
-        val results = ConcurrentHashMap<String, FileListItem>()
-
-        if (propertyNameTextField.text.isEmpty()) return listOf()
-
-        ApplicationManager.getApplication().runReadAction {
-            val searchHelper = PsiSearchHelper.getInstance(project)
-            val processor = TextOccurenceProcessor { element, off ->
-
-                val module = ModuleUtilCore.findModuleForPsiElement(element) ?: return@TextOccurenceProcessor true
-                if (module.name != selectedItem && selectedItem != Constants.MODULES_ALL && !dialogModel.userDefinedModules.contains(selectedItem)) return@TextOccurenceProcessor true
-                val containingFile = element.containingFile
-
-                if (!isFileNameContainsSpecifiedProfiles(containingFile)) return@TextOccurenceProcessor true
-                if (!isOffsetAtLineStart(containingFile, off)) return@TextOccurenceProcessor true
-                val filePath = getRelativePath(containingFile.virtualFile)
-                val value = element.text.split("=")[1].ifEmpty { "<empty>" }
-                results[filePath] = FileListItem(filePath, value, getLineNumber(containingFile, off))
-                true
-            }
-
-            val searchScope = DefaultSearchScopeProviders.wrapNamedScope(
-                project,
-                NamedScopeManager.getScope(project, DEFAULT_CONFIG_SCOPE)!!,
-                false
-            )
-            NamedScopeManager.getInstance(project)
-            searchHelper.processElementsWithWord(
-                processor,
-                searchScope,
-                "${propertyNameTextField.text}=",
-                UsageSearchContext.ANY,
-                false
-            )
-        }
-
-        return results.map { it.value }
-    }
-
-    private fun isFileNameContainsSpecifiedProfiles(containingFile: PsiFile): Boolean {
-        var hasProfiles = false
-        val selectedProfiles = getSelectedProfiles()
-        if (selectedProfiles.isNotEmpty()) {
-            selectedProfiles.forEach {
-                hasProfiles = hasProfiles || (containingFile.name.contains(it))
-            }
-        } else {
-            hasProfiles = true
-        }
-        return hasProfiles
-    }
-
-    private fun isOffsetAtLineStart(psiFile: PsiFile, offset: Int): Boolean {
-        val document: Document = psiFile.viewProvider.document ?: return false
-        val lineNumber = getLineNumber(psiFile, offset)
-        val lineStartOffset = document.getLineStartOffset(lineNumber)
-        return lineStartOffset == offset
-    }
-
-    private fun getLineNumber(psiFile: PsiFile, offset: Int) = psiFile.viewProvider.document.getLineNumber(offset)
-
-    private fun getRelativePath(file: VirtualFile): String {
-        val projectPath = project.basePath ?: return file.path
-        return file.path.removePrefix("$projectPath/")
-    }
-
     private fun createModifyTab(): JComponent {
         val panel = JPanel(BorderLayout())
 
@@ -249,13 +170,17 @@ class ConfigHelperDialog(
 
         val searchBtn = JButton(Constants.SEARCH).apply {
             addActionListener {
-                fileListRenderer.setItemsInList(search(modulesComboBox.selectedItem?.toString() ?: "All"))
+                val filePath = filePathProvider.getFilePath(
+                    modulesComboBox.selectedItem?.toString() ?: modulesComboBox.getItemAt(0)
+                )
+                val searchRes = finder.performSearch(getSelectedProfiles(), propertyNameTextField.text, filePath)
+                fileListRenderer.setItemsInList(searchRes)
             }
             maximumHeight = 10
         }
         val apply = JButton(Constants.APPLY).apply {
             addActionListener {
-                replace(propertyValueTextField.text)
+                replacePropValuesInSelectedFiles(propertyValueTextField.text)
             }
             maximumHeight = 10
         }
@@ -352,9 +277,9 @@ class ConfigHelperDialog(
         return panel
     }
 
-    private fun getSelectedProfiles(): List<String> {
+    private fun getSelectedProfiles(): Set<String> {
         return (profilesPanel.components[0] as JPanel).components.filter { (it as JCheckBox).isSelected }
-            .map { (it as JCheckBox).text }
+            .map { (it as JCheckBox).text }.toSet()
     }
 }
 

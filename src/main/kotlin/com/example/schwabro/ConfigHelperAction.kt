@@ -3,12 +3,12 @@ package com.example.schwabro
 import com.example.schwabro.Constants.MODULES_ALL
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.module.ModuleManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ModuleRootManager
 import com.example.schwabro.Utils.Companion.lookForDefaultConfigsDir
 import com.example.schwabro.settings.SchwaBroSettings
+import com.intellij.openapi.project.modules
 
 class ConfigHelperAction : AnAction(), DumbAware {
     override fun actionPerformed(e: AnActionEvent) {
@@ -23,12 +23,10 @@ class ConfigHelperAction : AnAction(), DumbAware {
     }
 
     private fun getModulesWithDefaults(project: Project): List<String> {
-        val moduleManager = ModuleManager.getInstance(project)
-        val modules = moduleManager.modules
+        val modules = project.modules
 
         val res = mutableListOf<String>()
-
-        for (module in modules) {
+        modules.drop(1).forEach { module ->
             val moduleRootManager = ModuleRootManager.getInstance(module)
             val contentRoots = moduleRootManager.contentRoots
 

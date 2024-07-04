@@ -5,7 +5,6 @@ import com.example.schwabro.Utils
 import com.example.schwabro.Utils.Companion.clear
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.Project
-import com.intellij.psi.search.scope.packageSet.NamedScopeManager
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.util.maximumHeight
 import java.awt.BorderLayout
@@ -95,7 +94,7 @@ class SchwaBroSettingsConfigurable(private val project: Project) : Configurable 
 
     override fun apply() {
         settings.setDirectories(modifiedDirectories)
-        val defaultConfigScope = Utils.createDefaultConfigScope(project, settings.state.directories.values.toSet())
+        val defaultConfigScope = Utils.createDefaultConfigScope(settings.state.directories.values.toSet())
         Utils.setDefaultConfigScope(project, defaultConfigScope)
     }
 

@@ -5,8 +5,8 @@ import com.intellij.find.FindManager
 import com.intellij.find.FindModel
 import com.intellij.openapi.project.Project
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.util.maximumHeight
 import java.awt.BorderLayout
+import javax.swing.BorderFactory
 import javax.swing.JButton
 import javax.swing.JPanel
 
@@ -15,15 +15,13 @@ class SearchPanel(
     private val onSearchAction: Runnable
 ) : JPanel(BorderLayout()) {
 
-    /**
-     * TODO: Use the same layout as directoryPanel in [SchwaBroSettingsConfigurable]
-     */
     init {
+        val innerPanel = JPanel(BorderLayout()).apply {
+            border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+
+        }
         val searchField = JBTextField()
-        add(searchField, BorderLayout.NORTH)
-        val searchButton = JButton(Constants.SEARCH)
-        searchButton.apply {
-            maximumHeight = 20
+        val searchButton = JButton(Constants.SEARCH).apply {
             addActionListener {
                 val searchText = searchField.text
                 if (searchText.isNotEmpty()) {
@@ -39,7 +37,11 @@ class SearchPanel(
                 }
             }
         }
-        add(searchButton, BorderLayout.PAGE_END)
+
+        innerPanel.add(searchField, BorderLayout.CENTER)
+        innerPanel.add(searchButton, BorderLayout.EAST)
+
+        add(innerPanel, BorderLayout.PAGE_START)
     }
 
 }
