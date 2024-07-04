@@ -1,5 +1,6 @@
 package com.example.schwabro.depnotes;
 
+import com.example.schwabro.util.DepNoteUtils;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.ex.FileSystemTreeImpl;
@@ -172,7 +173,7 @@ public class DepNoteWindowContent implements ToolWindowContent {
                 }
             }
             if (!checkedFiles.isEmpty()) {
-                AddDepNoteAction.createNewFile(fileSystemTree, project, changedFiles, checkedFiles);
+                DepNoteUtils.createNewFile(fileSystemTree, project, changedFiles, checkedFiles);
                 toolWindow.hide();
             } else {
                 Messages.showMessageDialog(changedFiles == null ? "No .properties files were changed" : "Please, choose .properties file",
