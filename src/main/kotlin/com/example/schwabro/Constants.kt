@@ -5,7 +5,7 @@ object Constants {
     const val DEFAULT_CONFIGS = "default_configs"
     const val MODULES_ALL = "All"
     const val SEARCH = "Search"
-    const val APPLY = "Apply"
+    const val REPLACE = "Replace"
     const val PROFILES = "Profiles"
     const val MODULES = "Modules"
     const val ADD = "Add"

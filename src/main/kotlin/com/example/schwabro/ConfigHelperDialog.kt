@@ -14,6 +14,7 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.components.JBTabbedPane
 import com.intellij.ui.util.maximumHeight
+import com.intellij.ui.util.maximumWidth
 import io.ktor.util.*
 import java.awt.BorderLayout
 import java.awt.Dimension
@@ -113,7 +114,7 @@ class ConfigHelperDialog(
         return profiles
     }
 
-    private fun replacePropValuesInSelectedFiles(newValue: String) {
+    private fun replacePropValuesInSelectedFiles(newValue: String?) {
         val fileItemsToReplaceIn = fileListRenderer.getSelectedValues().ifEmpty { fileListRenderer.items }
         fileItemsToReplaceIn.forEach { item ->
             val tfn = Paths.get(project.basePath ?: "").resolve(item.fileName).toString()
@@ -131,17 +132,21 @@ class ConfigHelperDialog(
         }
     }
 
-    private fun replaceInDocument(document: Document, item: FileListItem, newValue: String) {
+    private fun replaceInDocument(document: Document, item: FileListItem, newValue: String?) {
         val lines = document.text.split("\n").toMutableList()
         val pn = propertyNameTextField.text
 
-        if (item.lineNumber in lines.indices) {
-            lines[item.lineNumber] = "${pn.toUpperCasePreservingASCIIRules()}=$newValue"
+        if (newValue == null) {
+            if (item.lineNumber in lines.indices) {
+                lines.removeAt(item.lineNumber)
+            }
         } else {
-            lines.add("${pn.toUpperCasePreservingASCIIRules()}=$newValue")
+            if (item.lineNumber in lines.indices) {
+                lines[item.lineNumber] = "${pn.toUpperCasePreservingASCIIRules()}=$newValue"
+            } else {
+                lines.add("${pn.toUpperCasePreservingASCIIRules()}=$newValue")
+            }
         }
-
-
         val newText = lines.joinToString("\n")
         document.setText(newText)
         FileDocumentManager.getInstance().saveDocument(document)
@@ -170,6 +175,8 @@ class ConfigHelperDialog(
 
         val searchBtn = JButton(Constants.SEARCH).apply {
             addActionListener {
+                if (propertyNameTextField.text.isEmpty())
+                    return@addActionListener
                 val filePath = filePathProvider.getFilePath(
                     modulesComboBox.selectedItem?.toString() ?: modulesComboBox.getItemAt(0)
                 )
@@ -178,14 +185,23 @@ class ConfigHelperDialog(
             }
             maximumHeight = 10
         }
-        val apply = JButton(Constants.APPLY).apply {
+        val replaceBtn = JButton(Constants.REPLACE).apply {
             addActionListener {
                 replacePropValuesInSelectedFiles(propertyValueTextField.text)
             }
             maximumHeight = 10
         }
+        val deleteBtn = JButton(Constants.DELETE).apply {
+            addActionListener {
+                replacePropValuesInSelectedFiles(null)
+            }
+        }
         btnsPanel.add(searchBtn, BorderLayout.LINE_START)
-        btnsPanel.add(apply, BorderLayout.LINE_END)
+        btnsPanel.add(JPanel(BorderLayout()).apply {
+            maximumWidth = 100
+            add(deleteBtn, BorderLayout.CENTER)
+            add(replaceBtn, BorderLayout.LINE_END)
+        }, BorderLayout.LINE_END)
         btnsPanel.maximumHeight = 20
         leftPanel.add(btnsPanel)
         leftPanel.add(Box.createVerticalStrut(10))
