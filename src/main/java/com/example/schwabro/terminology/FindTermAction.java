@@ -17,10 +17,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.example.schwabro.terminology.AllTermsMap.ALL_TERMS_MAP;
-
 public class FindTermAction extends AnAction {
-    private final Map<String, TermEntity> wordsToTooltips = ALL_TERMS_MAP;
+    private final Map<String, TermEntity> wordsToTooltips = AllTermsMap.firstUploadGlossary();
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
