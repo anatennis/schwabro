@@ -74,11 +74,9 @@ class ConfigHelperDialog(
                 }
             userDefinedDirs.forEach {
                 val basePath = Paths.get(project.basePath!!)
-                uniqueProfiles.addAll(
-                    retrieveConfigProfilesFromDir(
-                        LocalFileSystem.getInstance().findFileByNioFile(basePath.resolve(Paths.get(it.value)))!!
-                    )
-                )
+                val directory = LocalFileSystem.getInstance().findFileByNioFile(basePath.resolve(Paths.get(it.value)))
+                    ?: return uniqueProfiles
+                uniqueProfiles.addAll(retrieveConfigProfilesFromDir(directory))
             }
         } else if (userDefinedDirs.containsKey(moduleName)) {
             val dir = userDefinedDirs[moduleName]!!
